@@ -1,0 +1,33 @@
+{
+    "name": "liquiditaetstool",
+    "version": "1.0.0",
+    "description": "Automated cashflow forecasting tool with n8n, Supabase and SevDesk integration",
+    "main": "index.js",
+    "scripts": {
+      "start": "docker-compose up -d",
+      "stop": "docker-compose down",
+      "logs": "docker-compose logs -f",
+      "restart": "docker-compose restart"
+    },
+    "keywords": [
+      "cashflow",
+      "liquiditaet",
+      "automation",
+      "n8n",
+      "supabase",
+      "sevdesk",
+      "fintech"
+    ],
+    "author": "Volta",
+    "license": "MIT",
+    "dependencies": {
+      "@supabase/supabase-js": "^2.39.0",
+      "axios": "^1.6.2",
+      "dotenv": "^16.3.1"
+    },
+    "devDependencies": {
+      "eslint": "^8.55.0",
+      "prettier": "^3.1.1"
+    }
+  }
+  

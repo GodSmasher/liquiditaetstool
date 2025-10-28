@@ -1,0 +1,104 @@
+# ==============================================
+# LIQUIDITÄTSTOOL - GITIGNORE
+# ==============================================
+
+# Environment Variables - NEVER COMMIT!
+.env
+.env.local
+.env.production
+.env.development
+*.env
+
+# Node Modules
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# n8n Data (contains credentials!)
+n8n-data/
+.n8n/
+
+# Docker Volumes (persistent data)
+postgres_data/
+n8n_data/
+
+# Postman Environments (contains tokens!)
+postman/*environment.json
+!postman/TEMPLATE.postman_environment.json
+
+# Database Backups
+*.backup
+*.dump
+*.sql
+backups/
+
+# Logs (may contain sensitive data)
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+.cache/
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Build outputs
+dist/
+build/
+out/
+
+# Supabase local
+.supabase/
+
+# Credentials & Keys
+*.pem
+*.key
+*.cert
+credentials.json
+service-account.json
+
+# API Keys & Secrets
+secrets/
+.secrets
+
+# Mac
+.AppleDouble
+.LSOverride
+
+# Windows
+*.lnk
+
+# Compressed files
+*.zip
+*.tar.gz
+*.rar
