@@ -1,0 +1,370 @@
+{
+    "info": {
+      "name": "Supabase API - Liquiditätstool",
+      "description": "API Tests für Supabase Database",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+      {
+        "key": "supabase_url",
+        "value": "https://YOUR_PROJECT.supabase.co",
+        "type": "string"
+      },
+      {
+        "key": "supabase_anon_key",
+        "value": "YOUR_ANON_KEY",
+        "type": "string"
+      },
+      {
+        "key": "supabase_service_key",
+        "value": "YOUR_SERVICE_ROLE_KEY",
+        "type": "secret"
+      }
+    ],
+    "auth": {
+      "type": "apikey",
+      "apikey": [
+        {
+          "key": "value",
+          "value": "{{supabase_service_key}}",
+          "type": "string"
+        },
+        {
+          "key": "key",
+          "value": "apikey",
+          "type": "string"
+        }
+      ]
+    },
+    "item": [
+      {
+        "name": "Geschäftspartner",
+        "item": [
+          {
+            "name": "Get All Geschäftspartner",
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "apikey",
+                  "value": "{{supabase_service_key}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{supabase_service_key}}",
+                  "type": "text"
+                }
+              ],
+              "url": {
+                "raw": "{{supabase_url}}/rest/v1/geschaeftspartner?select=*",
+                "host": ["{{supabase_url}}"],
+                "path": ["rest", "v1", "geschaeftspartner"],
+                "query": [
+                  {
+                    "key": "select",
+                    "value": "*"
+                  }
+                ]
+              }
+            },
+            "response": []
+          },
+          {
+            "name": "Get Single Geschäftspartner by ID",
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "apikey",
+                  "value": "{{supabase_service_key}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{supabase_service_key}}",
+                  "type": "text"
+                }
+              ],
+              "url": {
+                "raw": "{{supabase_url}}/rest/v1/geschaeftspartner?id=eq.YOUR_UUID&select=*",
+                "host": ["{{supabase_url}}"],
+                "path": ["rest", "v1", "geschaeftspartner"],
+                "query": [
+                  {
+                    "key": "id",
+                    "value": "eq.YOUR_UUID"
+                  },
+                  {
+                    "key": "select",
+                    "value": "*"
+                  }
+                ]
+              }
+            },
+            "response": []
+          },
+          {
+            "name": "Create Geschäftspartner",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "apikey",
+                  "value": "{{supabase_service_key}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{supabase_service_key}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "type": "text"
+                },
+                {
+                  "key": "Prefer",
+                  "value": "return=representation",
+                  "type": "text"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"name\": \"Test Kunde\",\n  \"typ\": \"Kunde\",\n  \"unternehmen\": \"Test GmbH\",\n  \"email\": \"test@example.com\"\n}"
+              },
+              "url": {
+                "raw": "{{supabase_url}}/rest/v1/geschaeftspartner",
+                "host": ["{{supabase_url}}"],
+                "path": ["rest", "v1", "geschaeftspartner"]
+              }
+            },
+            "response": []
+          },
+          {
+            "name": "Update Geschäftspartner",
+            "request": {
+              "method": "PATCH",
+              "header": [
+                {
+                  "key": "apikey",
+                  "value": "{{supabase_service_key}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{supabase_service_key}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "type": "text"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"email\": \"updated@example.com\"\n}"
+              },
+              "url": {
+                "raw": "{{supabase_url}}/rest/v1/geschaeftspartner?id=eq.YOUR_UUID",
+                "host": ["{{supabase_url}}"],
+                "path": ["rest", "v1", "geschaeftspartner"],
+                "query": [
+                  {
+                    "key": "id",
+                    "value": "eq.YOUR_UUID"
+                  }
+                ]
+              }
+            },
+            "response": []
+          },
+          {
+            "name": "Delete Geschäftspartner",
+            "request": {
+              "method": "DELETE",
+              "header": [
+                {
+                  "key": "apikey",
+                  "value": "{{supabase_service_key}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{supabase_service_key}}",
+                  "type": "text"
+                }
+              ],
+              "url": {
+                "raw": "{{supabase_url}}/rest/v1/geschaeftspartner?id=eq.YOUR_UUID",
+                "host": ["{{supabase_url}}"],
+                "path": ["rest", "v1", "geschaeftspartner"],
+                "query": [
+                  {
+                    "key": "id",
+                    "value": "eq.YOUR_UUID"
+                  }
+                ]
+              }
+            },
+            "response": []
+          }
+        ]
+      },
+      {
+        "name": "Cashflow Pipeline",
+        "item": [
+          {
+            "name": "Get All Cashflow Entries",
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "apikey",
+                  "value": "{{supabase_service_key}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{supabase_service_key}}",
+                  "type": "text"
+                }
+              ],
+              "url": {
+                "raw": "{{supabase_url}}/rest/v1/cashflow_pipeline?select=*&order=datum.asc",
+                "host": ["{{supabase_url}}"],
+                "path": ["rest", "v1", "cashflow_pipeline"],
+                "query": [
+                  {
+                    "key": "select",
+                    "value": "*"
+                  },
+                  {
+                    "key": "order",
+                    "value": "datum.asc"
+                  }
+                ]
+              }
+            },
+            "response": []
+          },
+          {
+            "name": "Get Next 14 Days Forecast",
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "apikey",
+                  "value": "{{supabase_service_key}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{supabase_service_key}}",
+                  "type": "text"
+                }
+              ],
+              "url": {
+                "raw": "{{supabase_url}}/rest/v1/cashflow_pipeline?datum=gte.{{today}}&datum=lte.{{today_plus_14}}&select=*&order=datum.asc",
+                "host": ["{{supabase_url}}"],
+                "path": ["rest", "v1", "cashflow_pipeline"],
+                "query": [
+                  {
+                    "key": "datum",
+                    "value": "gte.{{today}}"
+                  },
+                  {
+                    "key": "datum",
+                    "value": "lte.{{today_plus_14}}"
+                  },
+                  {
+                    "key": "select",
+                    "value": "*"
+                  },
+                  {
+                    "key": "order",
+                    "value": "datum.asc"
+                  }
+                ]
+              }
+            },
+            "response": []
+          },
+          {
+            "name": "Create Cashflow Entry",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "apikey",
+                  "value": "{{supabase_service_key}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{supabase_service_key}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "type": "text"
+                },
+                {
+                  "key": "Prefer",
+                  "value": "return=representation",
+                  "type": "text"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"datum\": \"2025-11-05\",\n  \"bezeichnung\": \"Test Rechnung\",\n  \"quelle\": \"SevDesk\",\n  \"typ\": \"Einnahme\",\n  \"status\": \"Geplant\",\n  \"brutto_betrag\": 1500.00,\n  \"wahrscheinlichkeit\": 100,\n  \"gewichteter_betrag\": 1500.00,\n  \"referenz_id\": \"TEST-001\"\n}"
+              },
+              "url": {
+                "raw": "{{supabase_url}}/rest/v1/cashflow_pipeline",
+                "host": ["{{supabase_url}}"],
+                "path": ["rest", "v1", "cashflow_pipeline"]
+              }
+            },
+            "response": []
+          },
+          {
+            "name": "Search by Referenz-ID (Duplicate Check)",
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "apikey",
+                  "value": "{{supabase_service_key}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{supabase_service_key}}",
+                  "type": "text"
+                }
+              ],
+              "url": {
+                "raw": "{{supabase_url}}/rest/v1/cashflow_pipeline?referenz_id=eq.SEVDESK-12345&select=*",
+                "host": ["{{supabase_url}}"],
+                "path": ["rest", "v1", "cashflow_pipeline"],
+                "query": [
+                  {
+                    "key": "referenz_id",
+                    "value": "eq.SEVDESK-12345"
+                  },
+                  {
+                    "key": "select",
+                    "value": "*"
+                  }
+                ]
+              }
+            },
+            "response": []
+          }
+        ]
+      }
+    ]
+  }
