@@ -64,7 +64,7 @@ export default function DashboardLayout({
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500"></div>
           <p className="mt-4 text-gray-600">Wird geladen...</p>
         </div>
       </div>
@@ -74,13 +74,15 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-gray-900 shadow-lg border-b-2 border-amber-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo und Titel */}
             <div className="flex items-center space-x-3">
-              <span className="text-3xl">💰</span>
-              <h1 className="text-xl font-bold text-gray-900">
+              <svg className="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h1 className="text-xl font-bold text-amber-500">
                 Liquiditätstool
               </h1>
             </div>
@@ -88,15 +90,15 @@ export default function DashboardLayout({
             {/* User Info und Logout */}
             <div className="flex items-center space-x-4">
               <div className="hidden md:block text-right">
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-sm font-medium text-white">
                   {user?.email}
                 </p>
-                <p className="text-xs text-gray-500">Angemeldet</p>
+                <p className="text-xs text-gray-400">Angemeldet</p>
               </div>
               
               <button
                 onClick={handleLogout}
-                className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all shadow-sm font-medium"
+                className="flex items-center space-x-2 px-4 py-2 bg-amber-500 text-gray-900 rounded-lg hover:bg-amber-400 transition-all shadow-md font-medium"
               >
                 <svg 
                   className="w-4 h-4" 
@@ -124,11 +126,11 @@ export default function DashboardLayout({
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-12">
+      <footer className="bg-gray-900 border-t-2 border-amber-500 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="text-center text-sm text-gray-500">
+          <div className="text-center text-sm text-gray-400">
             <p>© 2024 Liquiditätstool - 14-Tage Liquiditätsprognose</p>
-            <p className="mt-1">Powered by Next.js & Supabase</p>
+            <p className="mt-1 text-amber-500">Powered by Next.js & Supabase</p>
           </div>
         </div>
       </footer>
