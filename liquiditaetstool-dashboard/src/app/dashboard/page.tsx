@@ -200,7 +200,7 @@ export default function DashboardPage() {
       {/* Quick Actions */}
       <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Schnellzugriff</h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {/* Rechnungen - Link */}
           <a 
             href="/dashboard/rechnungen" 
@@ -223,39 +223,38 @@ export default function DashboardPage() {
             <span className="font-medium">Cashflow</span>
           </a>
 
-          {/* Neue Rechnung - Disabled */}
-          <div className="relative group">
-            <button 
-              disabled
-              className="w-full flex items-center space-x-3 p-4 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed shadow-md opacity-60"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              <span className="font-medium">Neue Rechnung</span>
-            </button>
-            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-              Demnächst verfügbar
-              <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900"></div>
-            </div>
-          </div>
+          {/* Neue Rechnung - Aktiv */}
+          <a
+            href="/dashboard/neue-rechnung"
+            className="flex items-center space-x-3 p-4 bg-amber-500 text-gray-900 rounded-lg hover:bg-amber-400 transition-all shadow-md font-medium"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            <span className="font-medium">Neue Rechnung</span>
+          </a>
 
-          {/* Berichte - Disabled */}
-          <div className="relative group">
-            <button 
-              disabled
-              className="w-full flex items-center space-x-3 p-4 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed shadow-md opacity-60"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <span className="font-medium">Berichte</span>
-            </button>
-            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-              Demnächst verfügbar
-              <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900"></div>
-            </div>
-          </div>
+          {/* Forderungsmanagement - NEU */}
+          <a
+            href="/dashboard/forderungsmanagement"
+            className="flex items-center space-x-3 p-4 bg-gradient-to-r from-amber-500 to-amber-600 text-gray-900 rounded-lg hover:from-amber-400 hover:to-amber-500 transition-all shadow-md font-medium"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="font-medium">Forderungen</span>
+          </a>
+
+          {/* Berichte - Aktiv */}
+          <a
+            href="/dashboard/berichte"
+            className="flex items-center space-x-3 p-4 bg-gray-900 text-amber-500 rounded-lg hover:bg-gray-800 transition-all shadow-md"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span className="font-medium">Berichte</span>
+          </a>
         </div>
       </div>
 
