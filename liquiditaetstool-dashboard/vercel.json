@@ -1,8 +1,4 @@
 {
-  "framework": "nextjs",
-  "buildCommand": "cd liquiditaetstool-dashboard && npm run build",
-  "devCommand": "cd liquiditaetstool-dashboard && npm run dev",
-  "installCommand": "cd liquiditaetstool-dashboard && npm install",
-  "outputDirectory": "liquiditaetstool-dashboard/.next"
+  "framework": "nextjs"
 }
 
