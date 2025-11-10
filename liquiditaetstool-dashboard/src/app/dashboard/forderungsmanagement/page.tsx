@@ -153,73 +153,73 @@ export default function ForderungsmanagementPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Forderungsmanagement</h1>
-          <p className="mt-1 text-gray-600">Übersicht über alle Forderungen aus SevDesk & Reonic</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Forderungsmanagement</h1>
+          <p className="mt-0.5 text-sm text-gray-600">Übersicht über alle Forderungen aus SevDesk & Reonic</p>
         </div>
         <button
           onClick={triggerSync}
           disabled={syncing}
-          className="flex items-center gap-2 px-5 py-2.5 bg-amber-500 text-gray-900 rounded-lg hover:bg-amber-600 transition-all shadow-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 text-gray-900 rounded-lg hover:bg-amber-600 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <RefreshCw className={`w-5 h-5 ${syncing ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
           {syncing ? 'Synchronisiere...' : 'Synchronisieren'}
         </button>
       </div>
 
       {/* Stats Cards */}
       {status && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Gesamt Forderungen</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{status.total_invoices}</p>
+                <p className="text-xs font-medium text-gray-600">Gesamt Forderungen</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">{status.total_invoices}</p>
               </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-gray-500 to-gray-600 rounded-lg flex items-center justify-center shadow-lg">
-                <FileText className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 bg-gradient-to-br from-gray-500 to-gray-600 rounded-lg flex items-center justify-center">
+                <FileText className="w-5 h-5 text-white" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Offene Forderungen</p>
-                <p className="text-3xl font-bold text-amber-600 mt-2">{status.open_invoices}</p>
-                <p className="text-xs text-gray-500 mt-2">{formatCurrency(status.total_open_amount)}</p>
+                <p className="text-xs font-medium text-gray-600">Offene Forderungen</p>
+                <p className="text-2xl font-bold text-amber-600 mt-1">{status.open_invoices}</p>
+                <p className="text-xs text-gray-500 mt-1.5">{formatCurrency(status.total_open_amount)}</p>
               </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg flex items-center justify-center shadow-lg">
-                <TrendingUp className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 text-white" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Überfällig</p>
-                <p className="text-3xl font-bold text-red-600 mt-2">{status.overdue_invoices}</p>
-                <p className="text-xs text-gray-500 mt-2">{formatCurrency(status.total_overdue_amount)}</p>
+                <p className="text-xs font-medium text-gray-600">Überfällig</p>
+                <p className="text-2xl font-bold text-red-600 mt-1">{status.overdue_invoices}</p>
+                <p className="text-xs text-gray-500 mt-1.5">{formatCurrency(status.total_overdue_amount)}</p>
               </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-rose-600 rounded-lg flex items-center justify-center shadow-lg">
-                <AlertCircle className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-rose-600 rounded-lg flex items-center justify-center">
+                <AlertCircle className="w-5 h-5 text-white" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Bezahlt</p>
-                <p className="text-3xl font-bold text-emerald-600 mt-2">{status.paid_invoices}</p>
-                <p className="text-xs text-gray-500 mt-2">Erfolgreich eingegangen</p>
+                <p className="text-xs font-medium text-gray-600">Bezahlt</p>
+                <p className="text-2xl font-bold text-emerald-600 mt-1">{status.paid_invoices}</p>
+                <p className="text-xs text-gray-500 mt-1.5">Erfolgreich eingegangen</p>
               </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-green-600 rounded-lg flex items-center justify-center shadow-lg">
-                <CheckCircle2 className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-lg flex items-center justify-center">
+                <CheckCircle2 className="w-5 h-5 text-white" />
               </div>
             </div>
           </div>
@@ -227,39 +227,39 @@ export default function ForderungsmanagementPage() {
       )}
 
       {/* Table Card */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         {/* Table Header with Filters */}
-        <div className="px-6 py-4 border-b border-gray-200">
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className="px-5 py-3 border-b border-gray-200">
+          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
             <div>
-              <h3 className="text-lg font-bold text-gray-900">Forderungen</h3>
-              <p className="text-sm text-gray-600 mt-1">{filteredReceivables.length} von {receivables.length} Forderungen</p>
+              <h3 className="text-base font-semibold text-gray-900">Forderungen</h3>
+              <p className="text-xs text-gray-600 mt-0.5">{filteredReceivables.length} von {receivables.length} Forderungen</p>
             </div>
             
-            <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               {/* Search */}
               <div className="relative flex-1 sm:flex-initial">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Suchen..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent w-full sm:w-64"
+                  className="pl-9 pr-3 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent w-full sm:w-56 text-sm"
                 />
               </div>
 
               {/* Export Button */}
-              <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200">
-                <Download className="w-5 h-5" />
+              <button className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200">
+                <Download className="w-4 h-4" />
               </button>
             </div>
           </div>
 
           {/* Status Filters */}
-          <div className="flex items-center gap-2 mt-4">
-            <Filter className="w-4 h-4 text-gray-500" />
-            <span className="text-sm font-medium text-gray-700">Filter:</span>
+          <div className="flex items-center gap-2 mt-3">
+            <Filter className="w-3.5 h-3.5 text-gray-500" />
+            <span className="text-xs font-medium text-gray-700">Filter:</span>
             {[
               { value: 'all', label: 'Alle', color: 'bg-gray-900 text-white' },
               { value: 'open', label: 'Offen', color: 'bg-amber-500 text-white' },
@@ -269,9 +269,9 @@ export default function ForderungsmanagementPage() {
               <button
                 key={filter.value}
                 onClick={() => setStatusFilter(filter.value as any)}
-                className={`px-4 py-1.5 rounded-lg font-medium transition-all text-sm ${
+                className={`px-3 py-1 rounded-lg font-medium transition-colors text-xs ${
                   statusFilter === filter.value
-                    ? filter.color + ' shadow-sm'
+                    ? filter.color
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >

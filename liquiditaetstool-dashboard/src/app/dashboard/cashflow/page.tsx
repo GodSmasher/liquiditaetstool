@@ -182,28 +182,28 @@ export default function CashflowPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Cashflow-Analyse</h1>
-          <p className="mt-2 text-gray-600">Detaillierte Übersicht über Einnahmen und Ausgaben</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Cashflow-Analyse</h1>
+          <p className="mt-0.5 text-sm text-gray-600">Detaillierte Übersicht über Einnahmen und Ausgaben</p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={exportToCSV}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-amber-500 rounded-lg hover:bg-gray-800 transition-all shadow-md font-medium"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 text-amber-500 rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             CSV Export
           </button>
           <button
             onClick={exportToPDF}
-            className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-gray-900 rounded-lg hover:bg-amber-400 transition-all shadow-md font-medium"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 text-gray-900 rounded-lg hover:bg-amber-600 transition-colors text-sm font-medium"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
             </svg>
             PDF Export
@@ -212,15 +212,15 @@ export default function CashflowPage() {
       </div>
 
       {/* Zeitraum Filter */}
-      <div className="bg-white rounded-xl shadow-md p-4 border border-gray-200">
-        <div className="flex items-center gap-4">
-          <label className="text-sm font-medium text-gray-700">Zeitraum:</label>
-          <div className="flex gap-2">
+      <div className="bg-white rounded-lg shadow-sm p-3 border border-gray-200">
+        <div className="flex items-center gap-3">
+          <label className="text-xs font-medium text-gray-700">Zeitraum:</label>
+          <div className="flex gap-1.5">
             <button
               onClick={() => setTimeRange('7days')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-lg font-medium transition-colors text-sm ${
                 timeRange === '7days'
-                  ? 'bg-amber-500 text-gray-900 shadow-md'
+                  ? 'bg-amber-500 text-gray-900'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
@@ -228,9 +228,9 @@ export default function CashflowPage() {
             </button>
             <button
               onClick={() => setTimeRange('30days')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-lg font-medium transition-colors text-sm ${
                 timeRange === '30days'
-                  ? 'bg-amber-500 text-gray-900 shadow-md'
+                  ? 'bg-amber-500 text-gray-900'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
@@ -238,19 +238,19 @@ export default function CashflowPage() {
             </button>
             <button
               onClick={() => setTimeRange('90days')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-lg font-medium transition-colors text-sm ${
                 timeRange === '90days'
-                  ? 'bg-amber-500 text-gray-900 shadow-md'
+                  ? 'bg-amber-500 text-gray-900'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
               90 Tage
             </button>
           </div>
-          <div className="ml-auto flex gap-2">
+          <div className="ml-auto flex gap-1.5">
             <button
               onClick={() => setTypeFilter('all')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 typeFilter === 'all'
                   ? 'bg-gray-900 text-amber-500'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -260,7 +260,7 @@ export default function CashflowPage() {
             </button>
             <button
               onClick={() => setTypeFilter('income')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 typeFilter === 'income'
                   ? 'bg-green-500 text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -270,7 +270,7 @@ export default function CashflowPage() {
             </button>
             <button
               onClick={() => setTypeFilter('expense')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 typeFilter === 'expense'
                   ? 'bg-red-500 text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -283,15 +283,15 @@ export default function CashflowPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-xl hover:shadow-amber-500/20 transition-all duration-300">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Gesamt Einnahmen</p>
-              <p className="text-3xl font-bold text-green-600 mt-2">{formatCurrency(totalIncome)}</p>
+              <p className="text-xs font-medium text-gray-600">Gesamt Einnahmen</p>
+              <p className="text-2xl font-bold text-green-600 mt-1">{formatCurrency(totalIncome)}</p>
             </div>
-            <div className="bg-green-100 rounded-full p-3">
-              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-green-100 rounded-lg p-2">
+              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
               </svg>
             </div>
@@ -299,53 +299,53 @@ export default function CashflowPage() {
           <p className="text-xs text-gray-500 mt-4">Im gewählten Zeitraum</p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-xl hover:shadow-amber-500/20 transition-all duration-300">
+        <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Gesamt Ausgaben</p>
-              <p className="text-3xl font-bold text-red-600 mt-2">{formatCurrency(totalExpenses)}</p>
+              <p className="text-xs font-medium text-gray-600">Gesamt Ausgaben</p>
+              <p className="text-2xl font-bold text-red-600 mt-1">{formatCurrency(totalExpenses)}</p>
             </div>
-            <div className="bg-red-100 rounded-full p-3">
-              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-red-100 rounded-lg p-2">
+              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
               </svg>
             </div>
           </div>
-          <p className="text-xs text-gray-500 mt-4">Im gewählten Zeitraum</p>
+          <p className="text-xs text-gray-500 mt-3">Im gewählten Zeitraum</p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-xl hover:shadow-amber-500/20 transition-all duration-300">
+        <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Netto Cashflow</p>
-              <p className={`text-3xl font-bold mt-2 ${netCashflow >= 0 ? 'text-amber-600' : 'text-red-600'}`}>
+              <p className="text-xs font-medium text-gray-600">Netto Cashflow</p>
+              <p className={`text-2xl font-bold mt-1 ${netCashflow >= 0 ? 'text-amber-600' : 'text-red-600'}`}>
                 {formatCurrency(netCashflow)}
               </p>
             </div>
-            <div className="bg-amber-100 rounded-full p-3">
-              <svg className="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-amber-100 rounded-lg p-2">
+              <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
           </div>
-          <p className="text-xs text-gray-500 mt-4">Einnahmen - Ausgaben</p>
+          <p className="text-xs text-gray-500 mt-3">Einnahmen - Ausgaben</p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-xl hover:shadow-amber-500/20 transition-all duration-300">
+        <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Durchschnitt/Tag</p>
-              <p className={`text-3xl font-bold mt-2 ${averagePerDay >= 0 ? 'text-amber-600' : 'text-red-600'}`}>
+              <p className="text-xs font-medium text-gray-600">Durchschnitt/Tag</p>
+              <p className={`text-2xl font-bold mt-1 ${averagePerDay >= 0 ? 'text-amber-600' : 'text-red-600'}`}>
                 {formatCurrency(averagePerDay)}
               </p>
             </div>
-            <div className="bg-amber-100 rounded-full p-3">
-              <svg className="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-amber-100 rounded-lg p-2">
+              <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
           </div>
-          <p className="text-xs text-gray-500 mt-4">Durchschnittlicher Cashflow</p>
+          <p className="text-xs text-gray-500 mt-3">Durchschnittlicher Cashflow</p>
         </div>
       </div>
 
