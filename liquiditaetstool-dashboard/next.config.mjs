@@ -9,14 +9,6 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
   
-  experimental: {
-    serverActions: {
-      allowedOrigins: process.env.NODE_ENV === 'production' 
-        ? [process.env.NEXT_PUBLIC_APP_URL || ''] 
-        : ['localhost:3000', 'localhost:3001'],
-    },
-  },
-  
   // Image optimization
   images: {
     domains: ['your-supabase-project.supabase.co'],
