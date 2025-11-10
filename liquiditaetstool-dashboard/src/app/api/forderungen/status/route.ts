@@ -1,3 +1,6 @@
+export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
+
 import { NextResponse } from 'next/server'
 
 // Mock-Daten für Status (würde normalerweise aus DB berechnet)
