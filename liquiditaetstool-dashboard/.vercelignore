@@ -1,0 +1,31 @@
+# Vercel Ignore File
+# Files und Ordner, die nicht deployed werden sollen
+
+# Documentation
+*.md
+!README.md
+docs/
+STRUCTURE.md
+SETUP.md
+FORDERUNGEN_INTEGRATION.md
+FORDERUNGSMANAGEMENT_SETUP.md
+
+# Development
+.vscode/
+.idea/
+*.log
+.DS_Store
+
+# Testing
+coverage/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# Local env files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
