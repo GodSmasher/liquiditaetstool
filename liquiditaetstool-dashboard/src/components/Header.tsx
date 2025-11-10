@@ -4,12 +4,11 @@ import { ChevronDown, Plus, Download, Settings, Bell, LogOut } from 'lucide-reac
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import type { User } from '@supabase/supabase-js'
 
 interface HeaderProps {
   title?: string
-  user?: {
-    email: string
-  } | null
+  user?: User | null
 }
 
 export default function Header({ title, user }: HeaderProps) {
@@ -62,7 +61,7 @@ export default function Header({ title, user }: HeaderProps) {
               <div className="flex items-center gap-2">
                 <div className="hidden sm:block text-right">
                   <p className="text-xs font-medium text-gray-900">Volta Energietechnik</p>
-                  <p className="text-xs text-gray-500">{user?.email}</p>
+                  <p className="text-xs text-gray-500">{user?.email || 'Kein Email'}</p>
                 </div>
                 <div className="w-7 h-7 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg flex items-center justify-center font-semibold text-white text-xs">
                   VE
@@ -81,7 +80,7 @@ export default function Header({ title, user }: HeaderProps) {
                 <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-40">
                   <div className="px-4 py-3 border-b border-gray-100">
                     <p className="text-sm font-medium text-gray-900">Volta Energietechnik GmbH</p>
-                    <p className="text-xs text-gray-500 mt-1">{user?.email}</p>
+                    <p className="text-xs text-gray-500 mt-1">{user?.email || 'Kein Email'}</p>
                   </div>
                   
                   <button className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2">
