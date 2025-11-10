@@ -1,8 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import type { User } from '@supabase/supabase-js'
 import { 
   LayoutGrid, 
   TrendingUp, 
@@ -26,6 +28,17 @@ interface MenuItem {
 export default function Sidebar() {
   const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
+  const supabase = createClient()
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+    }
+    getUser()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const menuItems: MenuItem[] = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutGrid },
@@ -91,10 +104,12 @@ export default function Sidebar() {
       <div className="px-3 py-3 border-t border-gray-700">
         <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-700/50 transition-colors cursor-pointer">
           <div className="w-8 h-8 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center font-semibold text-white text-xs">
-            LM
+            {user?.email ? user.email.substring(0, 2).toUpperCase() : 'VE'}
           </div>
           <div className="flex-1">
-            <p className="text-white text-sm font-medium">Lukas Müller</p>
+            <p className="text-white text-sm font-medium">
+              {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Benutzer'}
+            </p>
             <p className="text-gray-400 text-xs">Admin</p>
           </div>
         </div>
