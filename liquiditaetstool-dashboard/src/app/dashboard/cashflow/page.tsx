@@ -29,8 +29,30 @@ export default function CashflowPage() {
       }
 
       const data = await res.json()
+      
+      // DEBUG LOGGING (Development Only)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔍 Cashflow API Response:', {
+          success: data.success,
+          monthlyDataLength: data.data?.monthlyData?.length || 0,
+          summary: data.data?.summary,
+          firstMonth: data.data?.monthlyData?.[0],
+          lastMonth: data.data?.monthlyData?.[data.data?.monthlyData?.length - 1]
+        })
+      }
+
       if (data.success && data.data) {
         setCashflowData(data.data)
+        
+        // Additional validation
+        if (process.env.NODE_ENV === 'development') {
+          console.log('✅ Cashflow Data Set:', {
+            months: data.data.monthlyData.length,
+            hasData: data.data.monthlyData.some((m: any) => 
+              m.erwarteteEinnahmen > 0 || m.tatsaechlicheEinnahmen > 0
+            )
+          })
+        }
       } else {
         throw new Error(data.error || 'Unbekannter Fehler')
       }
@@ -116,6 +138,26 @@ export default function CashflowPage() {
 
   return (
     <div className="space-y-6">
+      {/* Debug Panel (Development Only) */}
+      {process.env.NODE_ENV === 'development' && cashflowData && (
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-xs font-mono">
+          <p className="font-bold mb-2">🔍 Debug Info</p>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <p>Monate: {monthlyData.length}</p>
+              <p>Total Pending: {formatCurrency(summary.totalPending)}</p>
+              <p>Total Paid: {formatCurrency(summary.totalPaid)}</p>
+            </div>
+            <div>
+              <p>Total Overdue: {formatCurrency(summary.totalOverdue)}</p>
+              <p>Risk: {summary.riskPercentage.toFixed(1)}%</p>
+              <p>Paid This Month: {formatCurrency(summary.paidThisMonth)}</p>
+            </div>
+          </div>
+          <p className="mt-2 text-gray-600">Letzte Aktualisierung: {new Date().toLocaleTimeString('de-DE')}</p>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

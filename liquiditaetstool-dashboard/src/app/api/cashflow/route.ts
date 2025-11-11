@@ -110,20 +110,19 @@ export async function GET(request: Request) {
         newest: invoices[0]?.invoice_date || invoices[0]?.created_at
       })
       console.log('Period Filter:', period, '(', months, 'months )')
-      console.log('═══════════════════════════════')
     }
 
-    // Group by month
-    const monthlyMap = new Map<string, MonthlyData>()
+    // IMPROVED: Group by month using reduce for better aggregation
+    const monthlyMap: Record<string, MonthlyData> = {}
 
-    // Generate all months in range
+    // Generate all months in range first
     for (let i = 0; i < months; i++) {
       const date = new Date(startDate)
       date.setMonth(date.getMonth() + i)
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
       const monthLabel = date.toLocaleDateString('de-DE', { month: 'short', year: 'numeric' })
 
-      monthlyMap.set(monthKey, {
+      monthlyMap[monthKey] = {
         month: monthKey,
         monthLabel,
         erwarteteEinnahmen: 0,
@@ -132,62 +131,47 @@ export async function GET(request: Request) {
         ueberfaellig: 0,
         anzahlRechnungen: 0,
         erfolgsrate: 0
-      })
+      }
     }
 
-    // Aggregate data
+    // Aggregate invoices into months
     processedInvoices.forEach(invoice => {
       const dueDate = new Date(invoice.due_date)
-      const createdDate = new Date(invoice.created_at || invoice.invoice_date)
+      const monthKey = `${dueDate.getFullYear()}-${String(dueDate.getMonth() + 1).padStart(2, '0')}`
+      
+      // Skip if month is not in our range
+      if (!monthlyMap[monthKey]) return
+
       const amount = invoice.amount
+      monthlyMap[monthKey].anzahlRechnungen++
 
-      // Group paid invoices by created_at month
       if (invoice.calculatedStatus === 'paid') {
-        const monthKey = `${createdDate.getFullYear()}-${String(createdDate.getMonth() + 1).padStart(2, '0')}`
-        const monthData = monthlyMap.get(monthKey)
-        if (monthData) {
-          monthData.tatsaechlicheEinnahmen += amount
-          monthData.anzahlRechnungen++
-        }
-      }
-
-      // Group pending invoices by due_date month
-      if (invoice.calculatedStatus === 'pending') {
-        const monthKey = `${dueDate.getFullYear()}-${String(dueDate.getMonth() + 1).padStart(2, '0')}`
-        const monthData = monthlyMap.get(monthKey)
-        if (monthData) {
-          monthData.erwarteteEinnahmen += amount
-          monthData.offeneForderungen += amount
-          monthData.anzahlRechnungen++
-        }
-      }
-
-      // Group overdue by due_date month
-      if (invoice.calculatedStatus === 'overdue') {
-        const monthKey = `${dueDate.getFullYear()}-${String(dueDate.getMonth() + 1).padStart(2, '0')}`
-        const monthData = monthlyMap.get(monthKey)
-        if (monthData) {
-          monthData.ueberfaellig += amount
-          monthData.offeneForderungen += amount
-          monthData.anzahlRechnungen++
-        }
+        monthlyMap[monthKey].tatsaechlicheEinnahmen += amount
+        monthlyMap[monthKey].erwarteteEinnahmen += amount // Paid is part of expected
+      } else if (invoice.calculatedStatus === 'pending') {
+        monthlyMap[monthKey].erwarteteEinnahmen += amount
+        monthlyMap[monthKey].offeneForderungen += amount
+      } else if (invoice.calculatedStatus === 'overdue') {
+        monthlyMap[monthKey].erwarteteEinnahmen += amount
+        monthlyMap[monthKey].ueberfaellig += amount
+        monthlyMap[monthKey].offeneForderungen += amount
       }
     })
 
     // Calculate success rate for each month
-    monthlyMap.forEach(monthData => {
-      const total = monthData.erwarteteEinnahmen + monthData.tatsaechlicheEinnahmen
+    Object.values(monthlyMap).forEach(monthData => {
+      const total = monthData.erwarteteEinnahmen
       if (total > 0) {
         monthData.erfolgsrate = (monthData.tatsaechlicheEinnahmen / total) * 100
       }
     })
 
     // Convert to array and sort by month
-    const monthlyData = Array.from(monthlyMap.values()).sort((a, b) => 
+    const monthlyData = Object.values(monthlyMap).sort((a, b) => 
       a.month.localeCompare(b.month)
     )
 
-    // Calculate summary
+    // Calculate summary statistics
     const totalPending = processedInvoices
       .filter(inv => inv.calculatedStatus === 'pending')
       .reduce((sum, inv) => sum + inv.amount, 0)
@@ -204,7 +188,7 @@ export async function GET(request: Request) {
     const currentYear = today.getFullYear()
     const paidThisMonth = processedInvoices
       .filter(inv => {
-        const date = new Date(inv.created_at || inv.invoice_date)
+        const date = new Date(inv.invoice_date || inv.created_at)
         return inv.calculatedStatus === 'paid' && 
                date.getMonth() === currentMonth && 
                date.getFullYear() === currentYear
@@ -238,6 +222,14 @@ export async function GET(request: Request) {
       }
     }
 
+    // Debug output in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📊 Cashflow Monthly Data:', monthlyData.length, 'months')
+      console.log('First month:', monthlyData[0])
+      console.log('Summary:', summary)
+      console.log('═══════════════════════════════')
+    }
+
     return NextResponse.json({
       success: true,
       data: cashflowData
@@ -251,4 +243,3 @@ export async function GET(request: Request) {
     )
   }
 }
-

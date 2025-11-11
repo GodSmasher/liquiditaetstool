@@ -35,7 +35,7 @@ interface RecentReceivable {
   customer: string
   amount: number
   dueDate: string
-  status: 'paid' | 'open' | 'overdue'
+  status: 'paid' | 'pending' | 'overdue'
   daysOverdue?: number
 }
 
@@ -56,6 +56,7 @@ export default function DashboardPage() {
   const [recentReceivables, setRecentReceivables] = useState<RecentReceivable[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [dateRange, setDateRange] = useState<{ from: string; to: string }>({ from: '', to: '' })
 
   // Lade Daten beim Component Mount
   useEffect(() => {
@@ -76,6 +77,16 @@ export default function DashboardPage() {
       const receivablesRes = await fetch('/api/forderungen')
       if (!receivablesRes.ok) throw new Error('Fehler beim Laden der Forderungen')
       const receivablesData = await receivablesRes.json()
+
+      // Berechne Zeitraum (aktuelles Jahr)
+      const currentYear = new Date().getFullYear()
+      const yearStart = `01.01.${currentYear}`
+      const todayFormatted = new Date().toLocaleDateString('de-DE', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      })
+      setDateRange({ from: yearStart, to: todayFormatted })
 
       // Berechne Statistiken
       const totalAmount = statusData.total_open_amount + statusData.total_overdue_amount + 
@@ -210,15 +221,20 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Gesamtumsatz mit Breakdown */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 lg:col-span-2">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
-              <Wallet className="w-5 h-5 text-amber-600" />
-            </div>
-            <div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                <Wallet className="w-5 h-5 text-amber-600" />
+              </div>
               <p className="text-sm text-gray-600 font-medium">Gesamtumsatz</p>
-              <p className="text-3xl font-bold text-gray-900 tabular-nums">{formatCurrency(stats.totalAmount)}</p>
             </div>
+            {dateRange.from && (
+              <span className="text-xs text-gray-500 tabular-nums">
+                {dateRange.from} - {dateRange.to}
+              </span>
+            )}
           </div>
+          <p className="text-3xl font-bold text-gray-900 tabular-nums mb-4 pl-13">{formatCurrency(stats.totalAmount)}</p>
           
           <div className="space-y-2.5 pl-13">
             {/* Bezahlt */}
