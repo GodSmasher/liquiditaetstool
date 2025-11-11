@@ -379,46 +379,59 @@ export default function DashboardPage() {
             </h3>
             
             <div className="space-y-2.5">
-              <div className="p-2.5 bg-red-50 border border-red-200 rounded-lg">
-                <div className="flex items-start gap-2">
-                  <Clock className="w-3.5 h-3.5 text-red-600 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-xs font-medium text-red-900">3 überfällige Rechnungen</p>
-                    <p className="text-xs text-red-700 mt-0.5">Gesamtbetrag: {formatCurrency(stats.overdueReceivables)}</p>
+              {stats.overdueCount > 0 && (
+                <div className="p-2.5 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="w-3.5 h-3.5 text-red-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs font-medium text-red-900">{stats.overdueCount} überfällige Rechnungen</p>
+                      <p className="text-xs text-red-700 mt-0.5 tabular-nums">Gesamtbetrag: {formatCurrency(stats.overdueAmount)}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
-              <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-lg">
-                <div className="flex items-start gap-2">
-                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-xs font-medium text-amber-900">2 Rechnungen bald fällig</p>
-                    <p className="text-xs text-amber-700 mt-0.5">Fällig in den nächsten 7 Tagen</p>
+              {stats.pendingCount > 0 && (
+                <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-lg">
+                  <div className="flex items-start gap-2">
+                    <Clock className="w-3.5 h-3.5 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs font-medium text-amber-900">{stats.pendingCount} offene Rechnungen</p>
+                      <p className="text-xs text-amber-700 mt-0.5 tabular-nums">Gesamtbetrag: {formatCurrency(stats.pendingAmount)}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
-          {/* Quick Stats Card */}
-          <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg shadow-md p-4 text-white">
-            <h3 className="text-sm font-semibold mb-3">Monatszusammenfassung</h3>
+          {/* Quick Stats Card - CLEAN DESIGN */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">Rechnungsübersicht</h3>
             
             <div className="space-y-2.5">
-              <div className="flex items-center justify-between pb-2.5 border-b border-white/20">
-                <span className="text-xs text-white/90">Einnahmen</span>
-                <span className="text-base font-semibold">+ {formatCurrency(45200)}</span>
+              <div className="flex items-center justify-between pb-2.5 border-b border-gray-200">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                  <span className="text-xs text-gray-600">Bezahlt</span>
+                </div>
+                <span className="text-sm font-semibold text-emerald-600 tabular-nums">{stats.paidCount}</span>
               </div>
               
-              <div className="flex items-center justify-between pb-2.5 border-b border-white/20">
-                <span className="text-xs text-white/90">Ausgaben</span>
-                <span className="text-base font-semibold">- {formatCurrency(38700)}</span>
+              <div className="flex items-center justify-between pb-2.5 border-b border-gray-200">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-3.5 h-3.5 text-amber-600" />
+                  <span className="text-xs text-gray-600">Offen</span>
+                </div>
+                <span className="text-sm font-semibold text-amber-600 tabular-nums">{stats.pendingCount}</span>
               </div>
               
               <div className="flex items-center justify-between pt-1">
-                <span className="text-xs font-semibold">Netto</span>
-                <span className="text-xl font-bold">+ {formatCurrency(6500)}</span>
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-3.5 h-3.5 text-red-600" />
+                  <span className="text-xs font-semibold text-gray-900">Überfällig</span>
+                </div>
+                <span className="text-base font-bold text-red-600 tabular-nums">{stats.overdueCount}</span>
               </div>
             </div>
           </div>
