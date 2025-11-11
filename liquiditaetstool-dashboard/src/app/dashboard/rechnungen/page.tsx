@@ -221,7 +221,7 @@ export default function RechnungenPage() {
     )
   }
 
-  // Calculate stats
+  // Calculate stats (mit tabular-nums für konsistente Darstellung)
   const stats = {
     total: filteredInvoices.length,
     totalAmount: filteredInvoices.reduce((sum, inv) => sum + inv.amount, 0),
@@ -317,71 +317,71 @@ export default function RechnungenPage() {
         </div>
       )}
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-xl hover:shadow-amber-500/20 transition-all duration-300">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Gesamt Rechnungen</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{stats.total}</p>
-            </div>
-            <div className="bg-amber-100 rounded-full p-3">
-              <svg className="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      {/* Stats Cards - CLEAN DESIGN */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Gesamt Rechnungen */}
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
+            <div>
+              <p className="text-sm text-gray-600">Gesamt</p>
+              <p className="text-2xl font-bold text-gray-900 tabular-nums">{stats.total}</p>
+            </div>
           </div>
-          <p className="text-xs text-gray-500 mt-4">Alle Rechnungen</p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-xl hover:shadow-amber-500/20 transition-all duration-300">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Gesamtbetrag</p>
-              <p className="text-3xl font-bold text-amber-600 mt-2">{formatCurrency(stats.totalAmount)}</p>
-            </div>
-            <div className="bg-amber-100 rounded-full p-3">
-              <svg className="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        {/* Gesamtbetrag */}
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
+            <div>
+              <p className="text-sm text-gray-600">Gesamtbetrag</p>
+              <p className="text-2xl font-bold text-gray-900 tabular-nums">{formatCurrency(stats.totalAmount)}</p>
+            </div>
           </div>
-          <p className="text-xs text-gray-500 mt-4">Summe aller Rechnungen</p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-xl hover:shadow-amber-500/20 transition-all duration-300">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Offene Beträge</p>
-              <p className="text-3xl font-bold text-amber-600 mt-2">{formatCurrency(stats.pendingAmount)}</p>
-            </div>
-            <div className="bg-amber-100 rounded-full p-3">
-              <svg className="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        {/* Offene Beträge */}
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
+            <div>
+              <p className="text-sm text-gray-600">Offen</p>
+              <p className="text-2xl font-bold text-gray-900 tabular-nums">{formatCurrency(stats.pendingAmount)}</p>
+            </div>
           </div>
-          <p className="text-xs text-gray-500 mt-4">Noch ausstehend</p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-xl hover:shadow-amber-500/20 transition-all duration-300">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Durchschnitt</p>
-              <p className="text-3xl font-bold text-amber-600 mt-2">{formatCurrency(stats.averageAmount)}</p>
-            </div>
-            <div className="bg-amber-100 rounded-full p-3">
-              <svg className="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        {/* Durchschnitt */}
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
+            <div>
+              <p className="text-sm text-gray-600">Durchschnitt</p>
+              <p className="text-2xl font-bold text-gray-900 tabular-nums">{formatCurrency(stats.averageAmount)}</p>
+            </div>
           </div>
-          <p className="text-xs text-gray-500 mt-4">Pro Rechnung</p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Search */}
           <div>
@@ -445,15 +445,15 @@ export default function RechnungenPage() {
         </div>
       ) : (
         <>
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             {/* Desktop Table */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-900">
+                <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th 
                       onClick={() => handleSort('invoice_number')}
-                      className="px-6 py-4 text-left text-xs font-bold text-amber-500 uppercase tracking-wider cursor-pointer hover:bg-gray-800 transition-colors"
+                      className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
                     >
                       <div className="flex items-center gap-2">
                         Rechnungsnr.
@@ -462,7 +462,7 @@ export default function RechnungenPage() {
                     </th>
                     <th 
                       onClick={() => handleSort('customer_name')}
-                      className="px-6 py-4 text-left text-xs font-bold text-amber-500 uppercase tracking-wider cursor-pointer hover:bg-gray-800 transition-colors"
+                      className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
                     >
                       <div className="flex items-center gap-2">
                         Kunde
@@ -471,7 +471,7 @@ export default function RechnungenPage() {
                     </th>
                     <th 
                       onClick={() => handleSort('amount')}
-                      className="px-6 py-4 text-left text-xs font-bold text-amber-500 uppercase tracking-wider cursor-pointer hover:bg-gray-800 transition-colors"
+                      className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
                     >
                       <div className="flex items-center gap-2">
                         Betrag
@@ -480,7 +480,7 @@ export default function RechnungenPage() {
                     </th>
                     <th 
                       onClick={() => handleSort('status')}
-                      className="px-6 py-4 text-left text-xs font-bold text-amber-500 uppercase tracking-wider cursor-pointer hover:bg-gray-800 transition-colors"
+                      className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
                     >
                       <div className="flex items-center gap-2">
                         Status
@@ -489,7 +489,7 @@ export default function RechnungenPage() {
                     </th>
                     <th 
                       onClick={() => handleSort('due_date')}
-                      className="px-6 py-4 text-left text-xs font-bold text-amber-500 uppercase tracking-wider cursor-pointer hover:bg-gray-800 transition-colors"
+                      className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
                     >
                       <div className="flex items-center gap-2">
                         Fällig am
@@ -498,14 +498,14 @@ export default function RechnungenPage() {
                     </th>
                     <th 
                       onClick={() => handleSort('created_at')}
-                      className="px-6 py-4 text-left text-xs font-bold text-amber-500 uppercase tracking-wider cursor-pointer hover:bg-gray-800 transition-colors"
+                      className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
                     >
                       <div className="flex items-center gap-2">
                         Erstellt
                         <SortIcon field="created_at" />
                       </div>
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-amber-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                       Aktionen
                     </th>
                   </tr>
@@ -515,7 +515,7 @@ export default function RechnungenPage() {
                     <tr 
                       key={invoice.id} 
                       onClick={() => router.push(`/dashboard/forderungen/${invoice.invoice_number}`)}
-                      className={`cursor-pointer hover:bg-amber-50 hover:shadow-lg transition-all duration-200 ${
+                      className={`cursor-pointer hover:bg-amber-50 transition-colors ${
                         index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
                       }`}
                     >
@@ -523,19 +523,19 @@ export default function RechnungenPage() {
                         <div className="text-sm font-semibold text-gray-900">{invoice.invoice_number}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{invoice.customer_name}</div>
+                        <div className="text-sm text-gray-900 truncate max-w-[200px]">{invoice.customer_name}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-bold text-gray-900">{formatCurrency(invoice.amount)}</div>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <div className="text-sm font-bold text-gray-900 tabular-nums">{formatCurrency(invoice.amount)}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getStatusBadge(invoice.status)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{formatDate(invoice.due_date)}</div>
+                        <div className="text-sm text-gray-900 tabular-nums">{formatDate(invoice.due_date)}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500">{formatDate(invoice.created_at)}</div>
+                        <div className="text-sm text-gray-500 tabular-nums">{formatDate(invoice.created_at)}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <button 
@@ -572,11 +572,11 @@ export default function RechnungenPage() {
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Betrag:</span>
-                      <span className="font-bold text-gray-900">{formatCurrency(invoice.amount)}</span>
+                      <span className="font-bold text-gray-900 tabular-nums">{formatCurrency(invoice.amount)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Fällig:</span>
-                      <span className="text-gray-900">{formatDate(invoice.due_date)}</span>
+                      <span className="text-gray-900 tabular-nums">{formatDate(invoice.due_date)}</span>
                     </div>
                     <button 
                       onClick={(e) => {
@@ -595,7 +595,7 @@ export default function RechnungenPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between bg-white rounded-xl shadow-md p-4 border border-gray-200">
+            <div className="flex items-center justify-between bg-white rounded-xl shadow-sm p-4 border border-gray-200">
               <div className="text-sm text-gray-700 font-medium">
                 Seite <span className="text-amber-600 font-bold">{currentPage}</span> von <span className="text-amber-600 font-bold">{totalPages}</span>
               </div>

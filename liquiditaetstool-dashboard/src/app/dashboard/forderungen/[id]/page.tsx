@@ -157,10 +157,10 @@ export default function InvoiceDetailPage() {
         throw new Error(data.error || 'Fehler beim Markieren als bezahlt')
       }
 
-      alert('✅ Rechnung wurde als bezahlt markiert!')
+      alert('Rechnung wurde als bezahlt markiert!')
       await loadInvoice() // Reload invoice data
     } catch (err: any) {
-      alert('❌ Fehler: ' + err.message)
+      alert('Fehler: ' + err.message)
       console.error('Error marking as paid:', err)
     } finally {
       setActionLoading(null)
@@ -184,10 +184,10 @@ export default function InvoiceDetailPage() {
         throw new Error(data.error || 'Fehler beim Senden der Mahnung')
       }
 
-      alert(`✅ ${data.message}`)
+      alert(data.message)
       await loadInvoice() // Reload invoice data
     } catch (err: any) {
-      alert('❌ Fehler: ' + err.message)
+      alert('Fehler: ' + err.message)
       console.error('Error sending reminder:', err)
     } finally {
       setActionLoading(null)
@@ -219,9 +219,9 @@ export default function InvoiceDetailPage() {
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
 
-      alert('✅ PDF wurde heruntergeladen!')
+      alert('PDF wurde heruntergeladen!')
     } catch (err: any) {
-      alert('❌ Fehler: ' + err.message)
+      alert('Fehler: ' + err.message)
       console.error('Error downloading PDF:', err)
     } finally {
       setActionLoading(null)

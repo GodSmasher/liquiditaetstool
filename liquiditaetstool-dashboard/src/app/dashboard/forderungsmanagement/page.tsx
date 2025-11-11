@@ -92,19 +92,19 @@ export default function ForderungsmanagementPage() {
         // Zeige spezifische Fehlermeldung vom Backend
         const errorMsg = data.message || data.error || 'Sync fehlgeschlagen'
         const details = data.details ? `\n\nDetails: ${data.details}` : ''
-        alert(`❌ ${errorMsg}${details}`)
+        alert(`Fehler: ${errorMsg}${details}`)
         return
       }
       
       // Erfolgreiche Synchronisation
       const invoiceCount = data.data?.invoices || 0
       const paymentCount = data.data?.payments || 0
-      alert(`✅ Sync erfolgreich!\n\n${invoiceCount} Rechnungen synchronisiert\n${paymentCount} Zahlungen synchronisiert`)
+      alert(`Synchronisation erfolgreich!\n\n${invoiceCount} Rechnungen synchronisiert\n${paymentCount} Zahlungen synchronisiert`)
       
       // Reload data
       await loadData()
     } catch (err: any) {
-      alert('❌ Fehler beim Synchronisieren: ' + err.message)
+      alert('Fehler beim Synchronisieren: ' + err.message)
       console.error('Sync error:', err)
     } finally {
       setSyncing(false)
@@ -187,56 +187,59 @@ export default function ForderungsmanagementPage() {
         </button>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards - CLEAN DESIGN */}
       {status && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-xs font-medium text-gray-600">Gesamt Forderungen</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">{status.total_invoices}</p>
+          {/* Gesamt */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
+                <FileText className="w-5 h-5 text-gray-600" />
               </div>
-              <div className="w-10 h-10 bg-gradient-to-br from-gray-500 to-gray-600 rounded-lg flex items-center justify-center">
-                <FileText className="w-5 h-5 text-white" />
+              <div>
+                <p className="text-sm text-gray-600">Gesamt</p>
+                <p className="text-2xl font-bold text-gray-900 tabular-nums">{status.total_invoices}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-xs font-medium text-gray-600">Offene Forderungen</p>
-                <p className="text-2xl font-bold text-amber-600 mt-1">{status.open_invoices}</p>
-                <p className="text-xs text-gray-500 mt-1.5">{formatCurrency(status.total_open_amount)}</p>
+          {/* Offen */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                <TrendingUp className="w-5 h-5 text-amber-600" />
               </div>
-              <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-white" />
+              <div>
+                <p className="text-sm text-gray-600">Offen</p>
+                <p className="text-2xl font-bold text-gray-900 tabular-nums">{status.open_invoices}</p>
               </div>
             </div>
+            <p className="text-xs text-gray-500 tabular-nums">{formatCurrency(status.total_open_amount)}</p>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-xs font-medium text-gray-600">Überfällig</p>
-                <p className="text-2xl font-bold text-red-600 mt-1">{status.overdue_invoices}</p>
-                <p className="text-xs text-gray-500 mt-1.5">{formatCurrency(status.total_overdue_amount)}</p>
+          {/* Überfällig */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
+                <AlertCircle className="w-5 h-5 text-red-600" />
               </div>
-              <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-rose-600 rounded-lg flex items-center justify-center">
-                <AlertCircle className="w-5 h-5 text-white" />
+              <div>
+                <p className="text-sm text-gray-600">Überfällig</p>
+                <p className="text-2xl font-bold text-red-600 tabular-nums">{status.overdue_invoices}</p>
               </div>
             </div>
+            <p className="text-xs text-gray-500 tabular-nums">{formatCurrency(status.total_overdue_amount)}</p>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-xs font-medium text-gray-600">Bezahlt</p>
-                <p className="text-2xl font-bold text-emerald-600 mt-1">{status.paid_invoices}</p>
-                <p className="text-xs text-gray-500 mt-1.5">Erfolgreich eingegangen</p>
+          {/* Bezahlt */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
               </div>
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-lg flex items-center justify-center">
-                <CheckCircle2 className="w-5 h-5 text-white" />
+              <div>
+                <p className="text-sm text-gray-600">Bezahlt</p>
+                <p className="text-2xl font-bold text-gray-900 tabular-nums">{status.paid_invoices}</p>
               </div>
             </div>
           </div>
@@ -346,13 +349,13 @@ export default function ForderungsmanagementPage() {
                       <div className="text-sm font-semibold text-gray-900">{receivable.invoice_id}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{receivable.customer}</div>
+                      <div className="text-sm text-gray-900 truncate max-w-[200px]">{receivable.customer}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <div className="text-sm font-bold text-gray-900">{formatCurrency(receivable.amount)}</div>
+                      <div className="text-sm font-bold text-gray-900 tabular-nums">{formatCurrency(receivable.amount)}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{formatDate(receivable.due_date)}</div>
+                      <div className="text-sm text-gray-900 tabular-nums">{formatDate(receivable.due_date)}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <StatusBadge status={receivable.status} size="sm" />
