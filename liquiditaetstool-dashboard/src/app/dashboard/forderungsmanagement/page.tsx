@@ -23,8 +23,10 @@ interface Receivable {
   customer: string
   amount: number
   due_date: string
-  status: 'paid' | 'open' | 'overdue'
+  status: 'paid' | 'open' | 'overdue' | 'pending'
   reminder_level: number
+  source?: string
+  id?: string
 }
 
 interface ReceivablesStatus {
@@ -42,7 +44,7 @@ export default function ForderungsmanagementPage() {
   const [status, setStatus] = useState<ReceivablesStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'overdue' | 'paid'>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'overdue' | 'paid' | 'pending'>('all')
   const [syncing, setSyncing] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -265,7 +267,7 @@ export default function ForderungsmanagementPage() {
             <span className="text-xs font-medium text-gray-700">Filter:</span>
             {[
               { value: 'all', label: 'Alle', color: 'bg-gray-900 text-white' },
-              { value: 'open', label: 'Offen', color: 'bg-amber-500 text-white' },
+              { value: 'pending', label: 'Ausstehend', color: 'bg-gray-500 text-white' },
               { value: 'overdue', label: 'Überfällig', color: 'bg-red-500 text-white' },
               { value: 'paid', label: 'Bezahlt', color: 'bg-emerald-500 text-white' },
             ].map((filter) => (

@@ -5,32 +5,31 @@ import { NextResponse } from 'next/server'
 
 export async function POST() {
   try {
-    // Simuliere Sync-Prozess
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    // TODO: Implementiere echte Synchronisation mit SevDesk/Reonic Backend
+    // Momentan nur ein Platzhalter, der anzeigt, dass die Funktion aufgerufen wurde
+    
+    // Simuliere Sync-Delay
+    await new Promise(resolve => setTimeout(resolve, 1000))
 
-    // In Zukunft: Hier würden SevDesk und Reonic APIs aufgerufen werden
-    // und die Daten in der Datenbank gespeichert
+    // In der Zukunft: Rufe das Backend auf, um Sync zu triggern
+    // const backendResponse = await fetch('http://localhost:3001/api/sync/trigger', {
+    //   method: 'POST'
+    // })
 
-    const result = {
+    return NextResponse.json({
       success: true,
       message: 'Synchronisation erfolgreich',
       data: {
-        invoices: 6,
-        payments: 3,
-        timestamp: new Date().toISOString(),
-      },
-    }
-
-    return NextResponse.json(result)
+        invoices: 0,
+        payments: 0,
+        note: 'Synchronisation mit Backend muss noch implementiert werden'
+      }
+    })
   } catch (error) {
     console.error('Error during sync:', error)
     return NextResponse.json(
-      { 
-        success: false,
-        error: 'Fehler bei der Synchronisation' 
-      },
+      { error: 'Fehler bei der Synchronisation' },
       { status: 500 }
     )
   }
 }
-

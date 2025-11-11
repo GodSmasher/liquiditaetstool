@@ -2,75 +2,74 @@ export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 
 import { NextResponse } from 'next/server'
-
-// Mock-Daten für Forderungen (später aus Datenbank/SevDesk/Reonic)
-const mockReceivables = [
-  {
-    invoice_id: 'SV-2024-0012',
-    customer: 'Musterfirma GmbH',
-    amount: 4200,
-    due_date: '2024-11-15',
-    status: 'overdue',
-    reminder_level: 1,
-    source: 'sevdesk'
-  },
-  {
-    invoice_id: 'SV-2024-0013',
-    customer: 'Tech Solutions AG',
-    amount: 8500,
-    due_date: '2024-12-20',
-    status: 'open',
-    reminder_level: 0,
-    source: 'sevdesk'
-  },
-  {
-    invoice_id: 'RE-2024-0501',
-    customer: 'Solar Energy GmbH',
-    amount: 12500,
-    due_date: '2024-11-25',
-    status: 'open',
-    reminder_level: 0,
-    source: 'reonic'
-  },
-  {
-    invoice_id: 'RE-2024-0502',
-    customer: 'Green Power Systems',
-    amount: 6800,
-    due_date: '2024-12-01',
-    status: 'open',
-    reminder_level: 0,
-    source: 'reonic'
-  },
-  {
-    invoice_id: 'SV-2024-0010',
-    customer: 'Energie Plus GmbH',
-    amount: 3200,
-    due_date: '2024-10-30',
-    status: 'overdue',
-    reminder_level: 2,
-    source: 'sevdesk'
-  },
-  {
-    invoice_id: 'RE-2024-0499',
-    customer: 'Öko Systems AG',
-    amount: 15000,
-    due_date: '2024-10-15',
-    status: 'paid',
-    reminder_level: 0,
-    source: 'reonic'
-  },
-]
+import { createClient } from '@/lib/supabase/server'
+import { calculateInvoiceStatus } from '@/lib/utils/invoice-helpers'
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const status = searchParams.get('status')
+    const statusFilter = searchParams.get('status')
+    const customerSearch = searchParams.get('customer')
+    const dateFrom = searchParams.get('date_from')
+    const dateTo = searchParams.get('date_to')
 
-    let receivables = mockReceivables
+    const supabase = await createClient()
 
-    // Filter nach Status wenn angegeben
-    if (status && status !== 'all') {
-      receivables = receivables.filter(r => r.status === status)
+    // Basis-Query
+    let query = supabase
+      .from('invoices')
+      .select('*')
+      .order('due_date', { ascending: false })
+
+    // Filter nach Kunde (optional)
+    if (customerSearch) {
+      query = query.ilike('customer_name', `%${customerSearch}%`)
+    }
+
+    // Filter nach Datumsbereich (optional)
+    if (dateFrom) {
+      query = query.gte('due_date', dateFrom)
+    }
+    if (dateTo) {
+      query = query.lte('due_date', dateTo)
+    }
+
+    const { data: invoices, error } = await query
+
+    if (error) {
+      console.error('Supabase error:', error)
+      return NextResponse.json(
+        { error: 'Fehler beim Laden der Forderungen aus der Datenbank' },
+        { status: 500 }
+      )
+    }
+
+    if (!invoices) {
+      return NextResponse.json([])
+    }
+
+    // Berechne Status für jede Rechnung und mappe auf Frontend-Format
+    let receivables = invoices.map(invoice => {
+      const calculatedStatus = calculateInvoiceStatus({
+        status: invoice.status,
+        due_date: invoice.due_date
+      })
+
+      return {
+        invoice_id: invoice.invoice_number,
+        customer: invoice.customer_name,
+        amount: parseFloat(invoice.amount as any),
+        due_date: invoice.due_date,
+        status: calculatedStatus,
+        reminder_level: invoice.reminder_count || 0,
+        source: invoice.source,
+        id: invoice.id // Füge ID für Detail-Navigation hinzu
+      }
+    })
+
+    // Filter nach Status wenn angegeben (nach Status-Berechnung)
+    if (statusFilter && statusFilter !== 'all') {
+      receivables = receivables.filter(r => r.status === statusFilter)
     }
 
     return NextResponse.json(receivables)

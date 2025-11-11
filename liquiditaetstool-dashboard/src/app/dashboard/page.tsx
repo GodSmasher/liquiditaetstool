@@ -37,47 +37,78 @@ interface RecentReceivable {
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats>({
-    currentBalance: 125430.50,
-    burnRate: -8500,
+    currentBalance: 125430.50, // TODO: Aus Bankkonto-Integration
+    burnRate: -8500, // TODO: Berechnen aus Transaktionen
     burnRateChange: -12.5,
-    openReceivables: 42350,
-    openReceivablesCount: 8,
-    overdueReceivables: 15200,
-    overdueCount: 3
+    openReceivables: 0,
+    openReceivablesCount: 0,
+    overdueReceivables: 0,
+    overdueCount: 0
   })
 
-  const [recentReceivables, setRecentReceivables] = useState<RecentReceivable[]>([
-    {
-      id: 'SV-2024-0012',
-      customer: 'Musterfirma GmbH',
-      amount: 4200,
-      dueDate: '2024-11-15',
-      status: 'overdue',
-      daysOverdue: 5
-    },
-    {
-      id: 'RE-2024-0501',
-      customer: 'Solar Energy GmbH',
-      amount: 12500,
-      dueDate: '2024-11-25',
-      status: 'open'
-    },
-    {
-      id: 'SV-2024-0013',
-      customer: 'Tech Solutions AG',
-      amount: 8500,
-      dueDate: '2024-12-20',
-      status: 'open'
-    },
-    {
-      id: 'SV-2024-0010',
-      customer: 'Energie Plus GmbH',
-      amount: 3200,
-      dueDate: '2024-10-30',
-      status: 'overdue',
-      daysOverdue: 21
-    },
-  ])
+  const [recentReceivables, setRecentReceivables] = useState<RecentReceivable[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Lade Daten beim Component Mount
+  useEffect(() => {
+    loadDashboardData()
+  }, [])
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      // Lade Status-Statistiken
+      const statusRes = await fetch('/api/forderungen/status')
+      if (!statusRes.ok) throw new Error('Fehler beim Laden der Statistiken')
+      const statusData = await statusRes.json()
+
+      // Lade aktuelle offene/überfällige Rechnungen
+      const receivablesRes = await fetch('/api/forderungen')
+      if (!receivablesRes.ok) throw new Error('Fehler beim Laden der Forderungen')
+      const receivablesData = await receivablesRes.json()
+
+      // Filtere nur offene und überfällige, sortiert nach Dringlichkeit
+      const openAndOverdue = receivablesData
+        .filter((r: any) => r.status === 'open' || r.status === 'overdue')
+        .sort((a: any, b: any) => {
+          // Überfällige zuerst
+          if (a.status === 'overdue' && b.status !== 'overdue') return -1
+          if (a.status !== 'overdue' && b.status === 'overdue') return 1
+          // Dann nach Fälligkeitsdatum
+          return new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
+        })
+        .slice(0, 4) // Nur die ersten 4 anzeigen
+        .map((r: any) => {
+          const daysUntilDue = getDaysUntilDue(r.due_date)
+          return {
+            id: r.invoice_id,
+            customer: r.customer,
+            amount: r.amount,
+            dueDate: r.due_date,
+            status: r.status,
+            daysOverdue: daysUntilDue < 0 ? Math.abs(daysUntilDue) : undefined
+          }
+        })
+
+      setStats({
+        ...stats,
+        openReceivables: statusData.total_open_amount,
+        openReceivablesCount: statusData.open_invoices,
+        overdueReceivables: statusData.total_overdue_amount,
+        overdueCount: statusData.overdue_invoices
+      })
+
+      setRecentReceivables(openAndOverdue)
+    } catch (err: any) {
+      console.error('Error loading dashboard data:', err)
+      setError(err.message || 'Fehler beim Laden der Daten')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('de-DE', {
@@ -101,6 +132,41 @@ export default function DashboardPage() {
     const diffTime = due.getTime() - today.getTime()
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
     return diffDays
+  }
+
+  // Loading State
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500"></div>
+          <p className="mt-4 text-gray-600">Lade Dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Error State
+  if (error) {
+    return (
+      <div className="space-y-5">
+        <div className="bg-red-50 border border-red-200 p-6 rounded-xl">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-red-900">Fehler beim Laden</h3>
+              <p className="mt-2 text-sm text-red-700">{error}</p>
+              <button
+                onClick={loadDashboardData}
+                className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+              >
+                Erneut versuchen
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
