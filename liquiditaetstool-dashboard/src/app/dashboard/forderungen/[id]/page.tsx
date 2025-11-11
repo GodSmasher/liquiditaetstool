@@ -142,28 +142,91 @@ export default function InvoiceDetailPage() {
   }
 
   const handleMarkAsPaid = async () => {
-    setActionLoading('paid')
-    // Simuliere API-Call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    alert('Rechnung wurde als bezahlt markiert!')
-    setActionLoading(null)
-    loadInvoice()
+    if (!confirm('Möchten Sie diese Rechnung wirklich als bezahlt markieren?')) {
+      return
+    }
+
+    try {
+      setActionLoading('paid')
+      const res = await fetch(`/api/forderungen/${invoiceId}/mark-paid`, {
+        method: 'POST'
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Fehler beim Markieren als bezahlt')
+      }
+
+      alert('✅ Rechnung wurde als bezahlt markiert!')
+      await loadInvoice() // Reload invoice data
+    } catch (err: any) {
+      alert('❌ Fehler: ' + err.message)
+      console.error('Error marking as paid:', err)
+    } finally {
+      setActionLoading(null)
+    }
   }
 
   const handleSendReminder = async () => {
-    setActionLoading('reminder')
-    // Simuliere API-Call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    alert('Zahlungserinnerung wurde versendet!')
-    setActionLoading(null)
+    if (!confirm('Möchten Sie eine Zahlungserinnerung senden?')) {
+      return
+    }
+
+    try {
+      setActionLoading('reminder')
+      const res = await fetch(`/api/forderungen/${invoiceId}/send-reminder`, {
+        method: 'POST'
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Fehler beim Senden der Mahnung')
+      }
+
+      alert(`✅ ${data.message}`)
+      await loadInvoice() // Reload invoice data
+    } catch (err: any) {
+      alert('❌ Fehler: ' + err.message)
+      console.error('Error sending reminder:', err)
+    } finally {
+      setActionLoading(null)
+    }
   }
 
   const handleDownloadPDF = async () => {
-    setActionLoading('pdf')
-    // Simuliere API-Call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    alert('PDF wird heruntergeladen...')
-    setActionLoading(null)
+    try {
+      setActionLoading('pdf')
+      const res = await fetch(`/api/forderungen/${invoiceId}/generate-pdf`)
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Fehler beim Generieren der PDF')
+      }
+
+      // Create blob from response
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      
+      // Create download link
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `Rechnung-${invoiceId}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      
+      // Cleanup
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      alert('✅ PDF wurde heruntergeladen!')
+    } catch (err: any) {
+      alert('❌ Fehler: ' + err.message)
+      console.error('Error downloading PDF:', err)
+    } finally {
+      setActionLoading(null)
+    }
   }
 
   if (loading) {

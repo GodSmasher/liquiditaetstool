@@ -86,14 +86,26 @@ export default function ForderungsmanagementPage() {
         method: 'POST',
       })
       
-      if (!res.ok) throw new Error('Sync fehlgeschlagen')
-      
       const data = await res.json()
-      alert(`Sync erfolgreich! ${data.data.invoices} Rechnungen synchronisiert`)
       
+      if (!res.ok) {
+        // Zeige spezifische Fehlermeldung vom Backend
+        const errorMsg = data.message || data.error || 'Sync fehlgeschlagen'
+        const details = data.details ? `\n\nDetails: ${data.details}` : ''
+        alert(`❌ ${errorMsg}${details}`)
+        return
+      }
+      
+      // Erfolgreiche Synchronisation
+      const invoiceCount = data.data?.invoices || 0
+      const paymentCount = data.data?.payments || 0
+      alert(`✅ Sync erfolgreich!\n\n${invoiceCount} Rechnungen synchronisiert\n${paymentCount} Zahlungen synchronisiert`)
+      
+      // Reload data
       await loadData()
     } catch (err: any) {
-      alert('Fehler beim Synchronisieren: ' + err.message)
+      alert('❌ Fehler beim Synchronisieren: ' + err.message)
+      console.error('Sync error:', err)
     } finally {
       setSyncing(false)
     }

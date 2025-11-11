@@ -3,33 +3,74 @@ export const fetchCache = 'force-no-store'
 
 import { NextResponse } from 'next/server'
 
+const BACKEND_URL = process.env.BACKEND_API_URL || 'http://localhost:3001'
+
 export async function POST() {
   try {
-    // TODO: Implementiere echte Synchronisation mit SevDesk/Reonic Backend
-    // Momentan nur ein Platzhalter, der anzeigt, dass die Funktion aufgerufen wurde
+    console.log('🔄 Starte Synchronisation mit Backend...')
     
-    // Simuliere Sync-Delay
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // Rufe das Backend auf, um Sync zu triggern
+    const backendResponse = await fetch(`${BACKEND_URL}/api/sync/trigger`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      // Timeout nach 30 Sekunden
+      signal: AbortSignal.timeout(30000)
+    })
 
-    // In der Zukunft: Rufe das Backend auf, um Sync zu triggern
-    // const backendResponse = await fetch('http://localhost:3001/api/sync/trigger', {
-    //   method: 'POST'
-    // })
+    if (!backendResponse.ok) {
+      const errorText = await backendResponse.text()
+      console.error('Backend Sync fehlgeschlagen:', errorText)
+      
+      return NextResponse.json({
+        success: false,
+        error: 'Backend-Synchronisation fehlgeschlagen',
+        message: 'Stelle sicher, dass das Backend (Port 3001) läuft',
+        details: errorText
+      }, { status: 502 })
+    }
+
+    const backendData = await backendResponse.json()
+    console.log('✅ Backend Sync erfolgreich:', backendData)
 
     return NextResponse.json({
       success: true,
-      message: 'Synchronisation erfolgreich',
+      message: 'Synchronisation erfolgreich abgeschlossen',
       data: {
-        invoices: 0,
-        payments: 0,
-        note: 'Synchronisation mit Backend muss noch implementiert werden'
+        invoices: backendData.data?.invoices || 0,
+        payments: backendData.data?.payments || 0,
+        source: 'backend',
+        timestamp: new Date().toISOString()
       }
     })
-  } catch (error) {
+
+  } catch (error: any) {
     console.error('Error during sync:', error)
-    return NextResponse.json(
-      { error: 'Fehler bei der Synchronisation' },
-      { status: 500 }
-    )
+
+    // Spezifische Fehlerbehandlung
+    if (error.name === 'AbortError') {
+      return NextResponse.json({
+        success: false,
+        error: 'Synchronisation Timeout',
+        message: 'Die Synchronisation hat zu lange gedauert (>30s)'
+      }, { status: 504 })
+    }
+
+    if (error.code === 'ECONNREFUSED') {
+      return NextResponse.json({
+        success: false,
+        error: 'Backend nicht erreichbar',
+        message: 'Das Backend ist nicht erreichbar. Stelle sicher, dass es läuft (npm run dev in forderungsmanagement-backend/)',
+        details: `Backend URL: ${BACKEND_URL}`
+      }, { status: 503 })
+    }
+
+    return NextResponse.json({
+      success: false,
+      error: 'Fehler bei der Synchronisation',
+      message: error.message || 'Unbekannter Fehler',
+      details: error.toString()
+    }, { status: 500 })
   }
 }

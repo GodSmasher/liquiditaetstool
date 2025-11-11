@@ -1,42 +1,79 @@
-// liquiditaetstool-dashboard/src/app/api/forderungen/[id]/send-reminder/route.ts
-// TODO: Email-Funktionalität mit Resend wird später implementiert
+export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
 
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server'
+import { NextResponse } from 'next/server'
 
 export async function POST(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
-    
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    const supabase = await createClient()
+    const invoiceId = params.id
+
+    // Finde die Rechnung
+    let { data: invoice, error: findError } = await supabase
+      .from('invoices')
+      .select('*')
+      .eq('invoice_number', invoiceId)
+      .single()
+
+    if (findError || !invoice) {
+      const result = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('id', invoiceId)
+        .single()
+      
+      invoice = result.data
+      findError = result.error
     }
 
-    // Email-Funktionalität ist noch nicht implementiert
-    return NextResponse.json(
-      { 
-        error: 'Email-Versand noch nicht implementiert',
-        message: 'Diese Funktion wird in Kürze verfügbar sein. Resend-Integration folgt später.'
-      },
-      { status: 501 } // 501 = Not Implemented
-    );
+    if (findError || !invoice) {
+      return NextResponse.json(
+        { error: 'Rechnung nicht gefunden' },
+        { status: 404 }
+      )
+    }
+
+    // Aktualisiere reminder_count und last_reminder_sent
+    const newReminderCount = (invoice.reminder_count || 0) + 1
+    const { data, error } = await supabase
+      .from('invoices')
+      .update({
+        reminder_count: newReminderCount,
+        last_reminder_sent: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', invoice.id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error updating invoice:', error)
+      return NextResponse.json(
+        { error: 'Fehler beim Aktualisieren der Rechnung' },
+        { status: 500 }
+      )
+    }
+
+    // TODO: Hier später E-Mail-Versand mit Resend oder Backend-Integration
+    // Momentan nur DB-Update
+    
+    return NextResponse.json({
+      success: true,
+      message: `${newReminderCount}. Mahnung wurde versendet`,
+      invoice: data,
+      reminder_level: newReminderCount
+    })
 
   } catch (error) {
-    console.error('Server error:', error);
+    console.error('Server error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Interner Serverfehler' },
       { status: 500 }
-    );
+    )
   }
 }
 

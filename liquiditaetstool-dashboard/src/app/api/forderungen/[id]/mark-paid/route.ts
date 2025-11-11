@@ -1,29 +1,42 @@
-// liquiditaetstool-dashboard/src/app/api/forderungen/[id]/mark-paid/route.ts
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server'
+import { NextResponse } from 'next/server'
 
 export async function POST(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createClient()
     
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    const invoiceId = params.id
+
+    // Finde die Rechnung (erst nach invoice_number, dann nach UUID)
+    let { data: invoice, error: findError } = await supabase
+      .from('invoices')
+      .select('*')
+      .eq('invoice_number', invoiceId)
+      .single()
+
+    if (findError || !invoice) {
+      const result = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('id', invoiceId)
+        .single()
+      
+      invoice = result.data
+      findError = result.error
     }
 
-    const invoiceId = params.id;
+    if (findError || !invoice) {
+      return NextResponse.json(
+        { error: 'Rechnung nicht gefunden' },
+        { status: 404 }
+      )
+    }
 
     // Update invoice status to paid
     const { data, error } = await supabase
@@ -32,36 +45,29 @@ export async function POST(
         status: 'paid',
         updated_at: new Date().toISOString()
       })
-      .eq('id', invoiceId)
+      .eq('id', invoice.id)
       .select()
-      .single();
+      .single()
 
     if (error) {
-      console.error('Error updating invoice:', error);
+      console.error('Error updating invoice:', error)
       return NextResponse.json(
-        { error: 'Failed to update invoice', details: error.message },
+        { error: 'Fehler beim Aktualisieren der Rechnung', details: error.message },
         { status: 500 }
-      );
-    }
-
-    if (!data) {
-      return NextResponse.json(
-        { error: 'Invoice not found' },
-        { status: 404 }
-      );
+      )
     }
 
     return NextResponse.json({
       success: true,
       message: 'Rechnung wurde als bezahlt markiert',
       invoice: data
-    });
+    })
 
   } catch (error) {
-    console.error('Server error:', error);
+    console.error('Server error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Interner Serverfehler' },
       { status: 500 }
-    );
+    )
   }
 }

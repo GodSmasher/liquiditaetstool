@@ -1,43 +1,41 @@
-// liquiditaetstool-dashboard/src/app/api/forderungen/[id]/generate-pdf/route.ts
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
-import PDFDocument from 'pdfkit';
+import { createClient } from '@/lib/supabase/server'
+import { NextResponse } from 'next/server'
+import PDFDocument from 'pdfkit'
 
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
-    
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const supabase = await createClient()
+    const invoiceId = params.id
 
-    const invoiceId = params.id;
-
-    // Fetch invoice data
-    const { data: invoice, error } = await supabase
+    // Finde die Rechnung (erst nach invoice_number, dann nach UUID)
+    let { data: invoice, error } = await supabase
       .from('invoices')
       .select('*')
-      .eq('id', invoiceId)
-      .single();
+      .eq('invoice_number', invoiceId)
+      .single()
+
+    if (error || !invoice) {
+      const result = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('id', invoiceId)
+        .single()
+      
+      invoice = result.data
+      error = result.error
+    }
 
     if (error || !invoice) {
       return NextResponse.json(
-        { error: 'Invoice not found' },
+        { error: 'Rechnung nicht gefunden' },
         { status: 404 }
-      );
+      )
     }
 
     // Check if PDF already exists in storage
