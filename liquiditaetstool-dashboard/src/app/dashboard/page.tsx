@@ -12,7 +12,8 @@ import {
   FileText, 
   ArrowRight,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  RefreshCw
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -172,9 +173,19 @@ export default function DashboardPage() {
   return (
     <div className="space-y-5">
       {/* Welcome Section */}
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Willkommen zurück!</h1>
-        <p className="text-sm text-gray-600 mt-0.5">Hier ist deine Finanzübersicht für heute</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">Willkommen zurück!</h1>
+          <p className="text-sm text-gray-600 mt-0.5">Hier ist deine Finanzübersicht für heute</p>
+        </div>
+        <button
+          onClick={loadDashboardData}
+          disabled={loading}
+          className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-gray-900 rounded-lg hover:bg-amber-600 transition-colors font-medium disabled:opacity-50"
+        >
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          Aktualisieren
+        </button>
       </div>
 
       {/* KPI Cards */}

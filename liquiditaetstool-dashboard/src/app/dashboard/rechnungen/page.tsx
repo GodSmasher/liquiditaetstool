@@ -4,7 +4,9 @@ export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { calculateInvoiceStatus } from '@/lib/utils/invoice-helpers'
 
 interface Invoice {
   id: string
@@ -20,6 +22,7 @@ type SortField = 'invoice_number' | 'customer_name' | 'amount' | 'status' | 'due
 type SortDirection = 'asc' | 'desc'
 
 export default function RechnungenPage() {
+  const router = useRouter()
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [filteredInvoices, setFilteredInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
@@ -64,7 +67,16 @@ export default function RechnungenPage() {
         return
       }
 
-      setInvoices(data || [])
+      // Berechne Status für jede Rechnung
+      const invoicesWithCalculatedStatus = (data || []).map(invoice => ({
+        ...invoice,
+        status: calculateInvoiceStatus({
+          status: invoice.status,
+          due_date: invoice.due_date
+        })
+      }))
+
+      setInvoices(invoicesWithCalculatedStatus)
     } catch (err: any) {
       console.error('Error loading invoices:', err)
       setError(err.message || 'Fehler beim Laden der Rechnungen')
@@ -265,16 +277,28 @@ export default function RechnungenPage() {
           <h1 className="text-3xl font-bold text-gray-900">Rechnungsübersicht</h1>
           <p className="mt-2 text-gray-600">Verwalte und überwache alle deine Rechnungen</p>
         </div>
-        <button
-          onClick={exportToCSV}
-          disabled={filteredInvoices.length === 0}
-          className="flex items-center gap-2 px-5 py-2.5 bg-amber-500 text-gray-900 rounded-lg hover:bg-amber-400 transition-all shadow-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          CSV Export
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={loadInvoices}
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 text-amber-500 rounded-lg hover:bg-gray-800 transition-all shadow-md font-medium disabled:opacity-50"
+          >
+            <svg className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Aktualisieren
+          </button>
+          <button
+            onClick={exportToCSV}
+            disabled={filteredInvoices.length === 0}
+            className="flex items-center gap-2 px-5 py-2.5 bg-amber-500 text-gray-900 rounded-lg hover:bg-amber-400 transition-all shadow-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            CSV Export
+          </button>
+        </div>
       </div>
 
       {/* Error Message */}
@@ -490,7 +514,8 @@ export default function RechnungenPage() {
                   {paginatedInvoices.map((invoice, index) => (
                     <tr 
                       key={invoice.id} 
-                      className={`hover:bg-amber-50 hover:shadow-lg transition-all duration-200 ${
+                      onClick={() => router.push(`/dashboard/forderungen/${invoice.invoice_number}`)}
+                      className={`cursor-pointer hover:bg-amber-50 hover:shadow-lg transition-all duration-200 ${
                         index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
                       }`}
                     >
@@ -513,8 +538,14 @@ export default function RechnungenPage() {
                         <div className="text-sm text-gray-500">{formatDate(invoice.created_at)}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <button className="text-amber-600 hover:text-amber-700 font-semibold hover:underline">
-                          Details
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            router.push(`/dashboard/forderungen/${invoice.invoice_number}`)
+                          }}
+                          className="text-amber-600 hover:text-amber-700 font-semibold hover:underline"
+                        >
+                          Details →
                         </button>
                       </td>
                     </tr>
@@ -526,7 +557,11 @@ export default function RechnungenPage() {
             {/* Mobile Cards */}
             <div className="md:hidden divide-y divide-gray-200">
               {paginatedInvoices.map((invoice) => (
-                <div key={invoice.id} className="p-4 hover:bg-amber-50 transition-colors">
+                <div 
+                  key={invoice.id} 
+                  onClick={() => router.push(`/dashboard/forderungen/${invoice.invoice_number}`)}
+                  className="p-4 hover:bg-amber-50 transition-colors cursor-pointer"
+                >
                   <div className="flex justify-between items-start mb-3">
                     <div>
                       <p className="text-sm font-semibold text-gray-900">{invoice.invoice_number}</p>
@@ -543,8 +578,14 @@ export default function RechnungenPage() {
                       <span className="text-gray-600">Fällig:</span>
                       <span className="text-gray-900">{formatDate(invoice.due_date)}</span>
                     </div>
-                    <button className="w-full mt-2 px-4 py-2 bg-amber-500 text-gray-900 rounded-lg text-sm font-semibold hover:bg-amber-400 transition-colors">
-                      Details anzeigen
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        router.push(`/dashboard/forderungen/${invoice.invoice_number}`)
+                      }}
+                      className="w-full mt-2 px-4 py-2 bg-amber-500 text-gray-900 rounded-lg text-sm font-semibold hover:bg-amber-400 transition-colors"
+                    >
+                      Details anzeigen →
                     </button>
                   </div>
                 </div>
