@@ -421,33 +421,38 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Quick Stats Card - CLEAN DESIGN */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Rechnungsübersicht</h3>
+          {/* Rechnungsübersicht - CLEAN DESIGN */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
+                <FileText className="w-5 h-5 text-gray-600" />
+              </div>
+              <p className="text-sm text-gray-600 font-medium">Rechnungsübersicht</p>
+            </div>
             
             <div className="space-y-2.5">
-              <div className="flex items-center justify-between pb-2.5 border-b border-gray-200">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-                  <span className="text-xs text-gray-600">Bezahlt</span>
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0"></div>
+                  <span className="text-sm text-gray-700">Bezahlt</span>
                 </div>
-                <span className="text-sm font-semibold text-emerald-600 tabular-nums">{stats.paidCount}</span>
+                <span className="text-sm font-bold text-gray-900 tabular-nums">{stats.paidCount}</span>
               </div>
               
-              <div className="flex items-center justify-between pb-2.5 border-b border-gray-200">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Clock className="w-3.5 h-3.5 text-amber-600" />
-                  <span className="text-xs text-gray-600">Offen</span>
+                  <div className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0"></div>
+                  <span className="text-sm text-gray-700">Offen</span>
                 </div>
-                <span className="text-sm font-semibold text-amber-600 tabular-nums">{stats.pendingCount}</span>
+                <span className="text-sm font-bold text-gray-900 tabular-nums">{stats.pendingCount}</span>
               </div>
               
-              <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <AlertTriangle className="w-3.5 h-3.5 text-red-600" />
-                  <span className="text-xs font-semibold text-gray-900">Überfällig</span>
+                  <div className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0"></div>
+                  <span className="text-sm text-gray-700">Überfällig</span>
                 </div>
-                <span className="text-base font-bold text-red-600 tabular-nums">{stats.overdueCount}</span>
+                <span className="text-sm font-bold text-red-600 tabular-nums">{stats.overdueCount}</span>
               </div>
             </div>
           </div>
