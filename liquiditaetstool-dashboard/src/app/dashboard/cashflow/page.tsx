@@ -4,511 +4,398 @@ export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 
 import { useEffect, useState } from 'react'
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-
-interface Transaction {
-  id: string
-  date: string
-  description: string
-  category: string
-  amount: number
-  type: 'income' | 'expense'
-  status: 'completed' | 'pending'
-}
-
-type TimeRange = '7days' | '30days' | '90days' | 'custom'
+import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import type { CashflowData, TimePeriod } from '@/lib/types/cashflow'
+import { TrendingUp, AlertTriangle, CheckCircle, Percent, RefreshCw, Wallet, DollarSign } from 'lucide-react'
 
 export default function CashflowPage() {
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([])
-  const [timeRange, setTimeRange] = useState<TimeRange>('30days')
-  const [typeFilter, setTypeFilter] = useState<'all' | 'income' | 'expense'>('all')
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 10
+  const [cashflowData, setCashflowData] = useState<CashflowData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [period, setPeriod] = useState<TimePeriod>('6months')
 
   useEffect(() => {
-    loadMockData()
-  }, [])
+    loadCashflowData()
+  }, [period])
 
-  useEffect(() => {
-    filterTransactions()
-  }, [transactions, timeRange, typeFilter])
+  const loadCashflowData = async () => {
+    try {
+      setLoading(true)
+      setError(null)
 
-  const loadMockData = () => {
-    // Mock-Daten - später aus Supabase laden
-    const mockTransactions: Transaction[] = [
-      { id: '1', date: '2024-11-04', description: 'Rechnung #2401', category: 'Verkauf', amount: 15000, type: 'income', status: 'completed' },
-      { id: '2', date: '2024-11-03', description: 'Materialeinkauf', category: 'Material', amount: -3500, type: 'expense', status: 'completed' },
-      { id: '3', date: '2024-11-02', description: 'Rechnung #2402', category: 'Verkauf', amount: 22000, type: 'income', status: 'completed' },
-      { id: '4', date: '2024-11-01', description: 'Mitarbeitergehälter', category: 'Personal', amount: -8000, type: 'expense', status: 'completed' },
-      { id: '5', date: '2024-10-31', description: 'Rechnung #2403', category: 'Verkauf', amount: 18500, type: 'income', status: 'completed' },
-      { id: '6', date: '2024-10-30', description: 'Büromaterial', category: 'Büro', amount: -450, type: 'expense', status: 'completed' },
-      { id: '7', date: '2024-10-29', description: 'Werkzeug', category: 'Material', amount: -1200, type: 'expense', status: 'completed' },
-      { id: '8', date: '2024-10-28', description: 'Rechnung #2404', category: 'Verkauf', amount: 12000, type: 'income', status: 'completed' },
-      { id: '9', date: '2024-10-27', description: 'Versicherung', category: 'Verwaltung', amount: -800, type: 'expense', status: 'completed' },
-      { id: '10', date: '2024-10-26', description: 'Rechnung #2405', category: 'Verkauf', amount: 25000, type: 'income', status: 'completed' },
-      { id: '11', date: '2024-10-25', description: 'Kraftstoff', category: 'Fahrzeug', amount: -350, type: 'expense', status: 'completed' },
-      { id: '12', date: '2024-10-24', description: 'Rechnung #2406', category: 'Verkauf', amount: 19000, type: 'income', status: 'completed' },
-    ]
-    setTransactions(mockTransactions)
-  }
+      const res = await fetch(`/api/cashflow?period=${period}`)
+      if (!res.ok) {
+        throw new Error('Fehler beim Laden der Cashflow-Daten')
+      }
 
-  const filterTransactions = () => {
-    let result = [...transactions]
-
-    // Zeitraum filtern
-    const today = new Date()
-    let startDate = new Date()
-    
-    switch (timeRange) {
-      case '7days':
-        startDate.setDate(today.getDate() - 7)
-        break
-      case '30days':
-        startDate.setDate(today.getDate() - 30)
-        break
-      case '90days':
-        startDate.setDate(today.getDate() - 90)
-        break
+      const data = await res.json()
+      if (data.success && data.data) {
+        setCashflowData(data.data)
+      } else {
+        throw new Error(data.error || 'Unbekannter Fehler')
+      }
+    } catch (err: any) {
+      console.error('Error loading cashflow:', err)
+      setError(err.message || 'Fehler beim Laden')
+    } finally {
+      setLoading(false)
     }
-
-    result = result.filter(t => new Date(t.date) >= startDate)
-
-    // Typ filtern
-    if (typeFilter !== 'all') {
-      result = result.filter(t => t.type === typeFilter)
-    }
-
-    setFilteredTransactions(result)
-    setCurrentPage(1)
   }
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('de-DE', {
       style: 'currency',
       currency: 'EUR',
-    }).format(Math.abs(amount))
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount)
   }
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('de-DE', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    })
+  const formatLargeNumber = (amount: number) => {
+    if (amount >= 1000000) {
+      return `${(amount / 1000000).toFixed(1)}M €`
+    } else if (amount >= 1000) {
+      return `${(amount / 1000).toFixed(0)}K €`
+    }
+    return formatCurrency(amount)
   }
 
-  // Statistiken berechnen
-  const totalIncome = filteredTransactions
-    .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0)
-
-  const totalExpenses = Math.abs(filteredTransactions
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amount, 0))
-
-  const netCashflow = totalIncome - totalExpenses
-
-  const daysInRange = timeRange === '7days' ? 7 : timeRange === '30days' ? 30 : 90
-  const averagePerDay = netCashflow / daysInRange
-
-  // Chart Daten vorbereiten
-  const lineChartData = filteredTransactions
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .reduce((acc: any[], transaction) => {
-      const dateStr = formatDate(transaction.date)
-      const existing = acc.find(item => item.date === dateStr)
-      
-      if (existing) {
-        if (transaction.type === 'income') {
-          existing.einnahmen += transaction.amount
-        } else {
-          existing.ausgaben += Math.abs(transaction.amount)
-        }
-      } else {
-        acc.push({
-          date: dateStr,
-          einnahmen: transaction.type === 'income' ? transaction.amount : 0,
-          ausgaben: transaction.type === 'expense' ? Math.abs(transaction.amount) : 0,
-        })
-      }
-      return acc
-    }, [])
-
-  // Kategorien für Pie Chart
-  const expenseCategories = filteredTransactions
-    .filter(t => t.type === 'expense')
-    .reduce((acc: any[], transaction) => {
-      const existing = acc.find(item => item.name === transaction.category)
-      if (existing) {
-        existing.value += Math.abs(transaction.amount)
-      } else {
-        acc.push({ name: transaction.category, value: Math.abs(transaction.amount) })
-      }
-      return acc
-    }, [])
-
-  const COLORS = ['#F59E0B', '#EF4444', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899']
-
-  // Pagination
-  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const endIndex = startIndex + itemsPerPage
-  const paginatedTransactions = filteredTransactions.slice(startIndex, endIndex)
-
-  const exportToCSV = () => {
-    const headers = ['Datum', 'Beschreibung', 'Kategorie', 'Betrag', 'Typ', 'Status']
-    const csvData = filteredTransactions.map(t => [
-      formatDate(t.date),
-      t.description,
-      t.category,
-      formatCurrency(t.amount),
-      t.type === 'income' ? 'Einnahme' : 'Ausgabe',
-      t.status === 'completed' ? 'Abgeschlossen' : 'Ausstehend',
-    ])
-
-    const csv = [
-      headers.join(';'),
-      ...csvData.map(row => row.join(';'))
-    ].join('\n')
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-    const link = document.createElement('a')
-    link.href = URL.createObjectURL(blob)
-    link.download = `cashflow_${new Date().toISOString().split('T')[0]}.csv`
-    link.click()
+  const formatPercent = (value: number) => {
+    return `${value.toFixed(1)}%`
   }
 
-  const exportToPDF = () => {
-    alert('PDF-Export wird in einer zukünftigen Version implementiert')
+  // Custom Tooltip for Chart
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200">
+          <p className="font-semibold text-gray-900 mb-2">{label}</p>
+          {payload.map((entry: any, index: number) => (
+            <p key={index} style={{ color: entry.color }} className="text-sm">
+              {entry.name}: <span className="font-bold">{formatCurrency(entry.value)}</span>
+            </p>
+          ))}
+        </div>
+      )
+    }
+    return null
   }
+
+  // Loading State
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500"></div>
+          <p className="mt-4 text-gray-600">Lade Cashflow-Daten...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Error State
+  if (error || !cashflowData) {
+    return (
+      <div className="space-y-5">
+        <div className="bg-red-50 border border-red-200 p-6 rounded-xl">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-red-900">Fehler beim Laden</h3>
+              <p className="mt-2 text-sm text-red-700">{error}</p>
+              <button
+                onClick={loadCashflowData}
+                className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+              >
+                Erneut versuchen
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const { monthlyData, summary } = cashflowData
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Cashflow-Analyse</h1>
-          <p className="mt-0.5 text-sm text-gray-600">Detaillierte Übersicht über Einnahmen und Ausgaben</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Cashflow-Prognose</h1>
+          <p className="text-sm text-gray-600 mt-0.5">Erwartete und tatsächliche Einnahmen im Überblick</p>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={exportToCSV}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 text-amber-500 rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            CSV Export
-          </button>
-          <button
-            onClick={exportToPDF}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 text-gray-900 rounded-lg hover:bg-amber-600 transition-colors text-sm font-medium"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-            </svg>
-            PDF Export
-          </button>
-        </div>
+        <button
+          onClick={loadCashflowData}
+          disabled={loading}
+          className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-gray-900 rounded-lg hover:bg-amber-600 transition-colors font-medium disabled:opacity-50"
+        >
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          Aktualisieren
+        </button>
       </div>
 
-      {/* Zeitraum Filter */}
-      <div className="bg-white rounded-lg shadow-sm p-3 border border-gray-200">
-        <div className="flex items-center gap-3">
-          <label className="text-xs font-medium text-gray-700">Zeitraum:</label>
-          <div className="flex gap-1.5">
-            <button
-              onClick={() => setTimeRange('7days')}
-              className={`px-3 py-1.5 rounded-lg font-medium transition-colors text-sm ${
-                timeRange === '7days'
-                  ? 'bg-amber-500 text-gray-900'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              7 Tage
-            </button>
-            <button
-              onClick={() => setTimeRange('30days')}
-              className={`px-3 py-1.5 rounded-lg font-medium transition-colors text-sm ${
-                timeRange === '30days'
-                  ? 'bg-amber-500 text-gray-900'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              30 Tage
-            </button>
-            <button
-              onClick={() => setTimeRange('90days')}
-              className={`px-3 py-1.5 rounded-lg font-medium transition-colors text-sm ${
-                timeRange === '90days'
-                  ? 'bg-amber-500 text-gray-900'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              90 Tage
-            </button>
-          </div>
-          <div className="ml-auto flex gap-1.5">
-            <button
-              onClick={() => setTypeFilter('all')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                typeFilter === 'all'
-                  ? 'bg-gray-900 text-amber-500'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              Alle
-            </button>
-            <button
-              onClick={() => setTypeFilter('income')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                typeFilter === 'income'
-                  ? 'bg-green-500 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              Einnahmen
-            </button>
-            <button
-              onClick={() => setTypeFilter('expense')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                typeFilter === 'expense'
-                  ? 'bg-red-500 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              Ausgaben
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-gray-600">Gesamt Einnahmen</p>
-              <p className="text-2xl font-bold text-green-600 mt-1">{formatCurrency(totalIncome)}</p>
-            </div>
-            <div className="bg-green-100 rounded-lg p-2">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
-              </svg>
-            </div>
-          </div>
-          <p className="text-xs text-gray-500 mt-4">Im gewählten Zeitraum</p>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-gray-600">Gesamt Ausgaben</p>
-              <p className="text-2xl font-bold text-red-600 mt-1">{formatCurrency(totalExpenses)}</p>
-            </div>
-            <div className="bg-red-100 rounded-lg p-2">
-              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
-              </svg>
-            </div>
-          </div>
-          <p className="text-xs text-gray-500 mt-3">Im gewählten Zeitraum</p>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-gray-600">Netto Cashflow</p>
-              <p className={`text-2xl font-bold mt-1 ${netCashflow >= 0 ? 'text-amber-600' : 'text-red-600'}`}>
-                {formatCurrency(netCashflow)}
-              </p>
-            </div>
-            <div className="bg-amber-100 rounded-lg p-2">
-              <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          </div>
-          <p className="text-xs text-gray-500 mt-3">Einnahmen - Ausgaben</p>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-gray-600">Durchschnitt/Tag</p>
-              <p className={`text-2xl font-bold mt-1 ${averagePerDay >= 0 ? 'text-amber-600' : 'text-red-600'}`}>
-                {formatCurrency(averagePerDay)}
-              </p>
-            </div>
-            <div className="bg-amber-100 rounded-lg p-2">
-              <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </div>
-          </div>
-          <p className="text-xs text-gray-500 mt-3">Durchschnittlicher Cashflow</p>
-        </div>
-      </div>
-
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Line Chart - Einnahmen vs Ausgaben */}
-        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Einnahmen vs Ausgaben</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={lineChartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-              <YAxis tick={{ fontSize: 12 }} />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="einnahmen" stroke="#10B981" strokeWidth={2} name="Einnahmen" />
-              <Line type="monotone" dataKey="ausgaben" stroke="#EF4444" strokeWidth={2} name="Ausgaben" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Pie Chart - Ausgaben nach Kategorien */}
-        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Ausgaben nach Kategorien</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={expenseCategories}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                outerRadius={100}
-                fill="#8884d8"
-                dataKey="value"
+      {/* Period Filter */}
+      <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
+        <div className="flex items-center gap-3 flex-wrap">
+          <label className="text-sm font-medium text-gray-700">Zeitraum:</label>
+          <div className="flex gap-2">
+            {[
+              { value: '3months', label: 'Nächste 3 Monate' },
+              { value: '6months', label: 'Nächste 6 Monate' },
+              { value: '12months', label: 'Nächstes Jahr' },
+              { value: 'ytd', label: 'Dieses Jahr (YTD)' },
+            ].map((option) => (
+              <button
+                key={option.value}
+                onClick={() => setPeriod(option.value as TimePeriod)}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors text-sm ${
+                  period === option.value
+                    ? 'bg-amber-500 text-gray-900'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
               >
-                {expenseCategories.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
+                {option.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Transaktions-Tabelle */}
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Offene Forderungen */}
+        <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl shadow-md p-6 text-white">
+          <div className="flex items-center justify-between mb-4">
+            <div className="bg-white/20 rounded-lg p-3">
+              <Wallet className="w-6 h-6" />
+            </div>
+            <TrendingUp className="w-5 h-5 opacity-60" />
+          </div>
+          <p className="text-sm text-white/80 font-medium">Offene Forderungen</p>
+          <p className="text-3xl font-bold mt-2">{formatLargeNumber(summary.totalPending)}</p>
+          <p className="text-xs text-white/70 mt-2">Ausstehende Zahlungen</p>
+        </div>
+
+        {/* Überfällige Rechnungen */}
+        <div className="bg-gradient-to-br from-red-500 to-rose-600 rounded-xl shadow-md p-6 text-white">
+          <div className="flex items-center justify-between mb-4">
+            <div className="bg-white/20 rounded-lg p-3">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <span className="text-xs font-bold bg-white/20 px-2 py-1 rounded">
+              {formatPercent(summary.riskPercentage)}
+            </span>
+          </div>
+          <p className="text-sm text-white/80 font-medium">Überfällige Rechnungen</p>
+          <p className="text-3xl font-bold mt-2">{formatLargeNumber(summary.totalOverdue)}</p>
+          <p className="text-xs text-white/70 mt-2">Risiko-Betrag</p>
+        </div>
+
+        {/* Bezahlt diesen Monat */}
+        <div className="bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl shadow-md p-6 text-white">
+          <div className="flex items-center justify-between mb-4">
+            <div className="bg-white/20 rounded-lg p-3">
+              <CheckCircle className="w-6 h-6" />
+            </div>
+            <DollarSign className="w-5 h-5 opacity-60" />
+          </div>
+          <p className="text-sm text-white/80 font-medium">Bezahlt diesen Monat</p>
+          <p className="text-3xl font-bold mt-2">{formatLargeNumber(summary.paidThisMonth)}</p>
+          <p className="text-xs text-white/70 mt-2">Einnahmen im aktuellen Monat</p>
+        </div>
+
+        {/* Erfolgsrate */}
+        <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-md p-6 text-white">
+          <div className="flex items-center justify-between mb-4">
+            <div className="bg-white/20 rounded-lg p-3">
+              <Percent className="w-6 h-6" />
+            </div>
+            <TrendingUp className="w-5 h-5 opacity-60" />
+          </div>
+          <p className="text-sm text-white/80 font-medium">Erfolgsrate</p>
+          <p className="text-3xl font-bold mt-2">
+            {formatPercent((summary.totalPaid / (summary.totalPaid + summary.totalPending)) * 100)}
+          </p>
+          <p className="text-xs text-white/70 mt-2">Bezahlt vs. Erwartet</p>
+        </div>
+      </div>
+
+      {/* Chart */}
+      <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-gray-900">Monatlicher Cashflow</h2>
+          <p className="text-sm text-gray-600 mt-1">Erwartete, tatsächliche und überfällige Einnahmen</p>
+        </div>
+
+        {monthlyData.length === 0 ? (
+          <div className="text-center py-12">
+            <AlertTriangle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Keine Daten verfügbar</h3>
+            <p className="text-gray-600">Es wurden noch keine Rechnungen für diesen Zeitraum erstellt.</p>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={400}>
+            <ComposedChart data={monthlyData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis 
+                dataKey="monthLabel" 
+                tick={{ fontSize: 12, fill: '#666' }}
+                angle={-45}
+                textAnchor="end"
+                height={80}
+              />
+              <YAxis 
+                tick={{ fontSize: 12, fill: '#666' }}
+                tickFormatter={(value) => formatLargeNumber(value)}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend 
+                wrapperStyle={{ paddingTop: '20px' }}
+                iconType="circle"
+              />
+              <Bar 
+                dataKey="erwarteteEinnahmen" 
+                fill="#10B981" 
+                name="Erwartete Einnahmen"
+                radius={[8, 8, 0, 0]}
+              />
+              <Bar 
+                dataKey="tatsaechlicheEinnahmen" 
+                fill="#3B82F6" 
+                name="Tatsächliche Einnahmen"
+                radius={[8, 8, 0, 0]}
+              />
+              <Bar 
+                dataKey="ueberfaellig" 
+                fill="#EF4444" 
+                name="Überfällig"
+                radius={[8, 8, 0, 0]}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="offeneForderungen" 
+                stroke="#F59E0B" 
+                strokeWidth={3}
+                name="Offene Forderungen"
+                dot={{ fill: '#F59E0B', r: 5 }}
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+
+      {/* Detailed Table */}
       <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Transaktionen</h3>
-          <p className="text-sm text-gray-600 mt-1">{filteredTransactions.length} Transaktionen gefunden</p>
-        </div>
-        
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-900">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-bold text-amber-500 uppercase tracking-wider">
-                  Datum
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-amber-500 uppercase tracking-wider">
-                  Beschreibung
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-amber-500 uppercase tracking-wider">
-                  Kategorie
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-amber-500 uppercase tracking-wider">
-                  Typ
-                </th>
-                <th className="px-6 py-4 text-right text-xs font-bold text-amber-500 uppercase tracking-wider">
-                  Betrag
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-amber-500 uppercase tracking-wider">
-                  Status
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {paginatedTransactions.map((transaction, index) => (
-                <tr 
-                  key={transaction.id}
-                  className={`hover:bg-amber-50 transition-colors ${
-                    index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
-                  }`}
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{formatDate(transaction.date)}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{transaction.description}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-600">{transaction.category}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                      transaction.type === 'income' 
-                        ? 'bg-green-100 text-green-700' 
-                        : 'bg-red-100 text-red-700'
-                    }`}>
-                      {transaction.type === 'income' ? (
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
-                        </svg>
-                      ) : (
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
-                        </svg>
-                      )}
-                      {transaction.type === 'income' ? 'Einnahme' : 'Ausgabe'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <div className={`text-sm font-bold ${
-                      transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {transaction.type === 'income' ? '+' : '-'} {formatCurrency(transaction.amount)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
-                      transaction.status === 'completed'
-                        ? 'bg-amber-100 text-amber-700'
-                        : 'bg-gray-100 text-gray-700'
-                    }`}>
-                      {transaction.status === 'completed' ? 'Abgeschlossen' : 'Ausstehend'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+          <h2 className="text-lg font-semibold text-gray-900">Detaillierte Monatsübersicht</h2>
+          <p className="text-sm text-gray-600 mt-1">Aufschlüsselung der Einnahmen pro Monat</p>
         </div>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
-            <div className="text-sm text-gray-700 font-medium">
-              Seite <span className="text-amber-600 font-bold">{currentPage}</span> von <span className="text-amber-600 font-bold">{totalPages}</span>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-                className="px-4 py-2 bg-gray-900 text-amber-500 rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                Zurück
-              </button>
-              <button
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
-                className="px-4 py-2 bg-amber-500 text-gray-900 rounded-lg text-sm font-semibold hover:bg-amber-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                Weiter
-              </button>
-            </div>
+        {monthlyData.length === 0 ? (
+          <div className="p-12 text-center">
+            <p className="text-gray-600">Keine Daten verfügbar</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-900">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-amber-500 uppercase tracking-wider">
+                    Monat
+                  </th>
+                  <th className="px-6 py-4 text-right text-xs font-bold text-amber-500 uppercase tracking-wider">
+                    Erwartet
+                  </th>
+                  <th className="px-6 py-4 text-right text-xs font-bold text-amber-500 uppercase tracking-wider">
+                    Bezahlt
+                  </th>
+                  <th className="px-6 py-4 text-right text-xs font-bold text-amber-500 uppercase tracking-wider">
+                    Offen
+                  </th>
+                  <th className="px-6 py-4 text-right text-xs font-bold text-amber-500 uppercase tracking-wider">
+                    Überfällig
+                  </th>
+                  <th className="px-6 py-4 text-center text-xs font-bold text-amber-500 uppercase tracking-wider">
+                    Anzahl
+                  </th>
+                  <th className="px-6 py-4 text-center text-xs font-bold text-amber-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {monthlyData.map((month, index) => {
+                  const statusColor = 
+                    month.ueberfaellig > 0 ? 'text-red-600' :
+                    month.tatsaechlicheEinnahmen > month.erwarteteEinnahmen ? 'text-green-600' :
+                    'text-amber-600'
+                  
+                  const statusIcon = 
+                    month.ueberfaellig > 0 ? '⚠️' :
+                    month.tatsaechlicheEinnahmen > month.erwarteteEinnahmen ? '✅' :
+                    '📊'
+
+                  return (
+                    <tr 
+                      key={month.month}
+                      className={`hover:bg-amber-50 transition-colors ${
+                        index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                      }`}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-semibold text-gray-900">{month.monthLabel}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <div className="text-sm font-bold text-green-600">{formatCurrency(month.erwarteteEinnahmen)}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <div className="text-sm font-bold text-blue-600">{formatCurrency(month.tatsaechlicheEinnahmen)}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <div className="text-sm font-bold text-amber-600">{formatCurrency(month.offeneForderungen)}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <div className="text-sm font-bold text-red-600">{formatCurrency(month.ueberfaellig)}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
+                          {month.anzahlRechnungen} Rechnungen
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <span className={`text-2xl ${statusColor}`}>{statusIcon}</span>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+              <tfoot className="bg-gray-50 border-t-2 border-gray-300">
+                <tr>
+                  <td className="px-6 py-4 text-sm font-bold text-gray-900">Gesamt</td>
+                  <td className="px-6 py-4 text-right text-sm font-bold text-green-600">
+                    {formatCurrency(monthlyData.reduce((sum, m) => sum + m.erwarteteEinnahmen, 0))}
+                  </td>
+                  <td className="px-6 py-4 text-right text-sm font-bold text-blue-600">
+                    {formatCurrency(monthlyData.reduce((sum, m) => sum + m.tatsaechlicheEinnahmen, 0))}
+                  </td>
+                  <td className="px-6 py-4 text-right text-sm font-bold text-amber-600">
+                    {formatCurrency(monthlyData.reduce((sum, m) => sum + m.offeneForderungen, 0))}
+                  </td>
+                  <td className="px-6 py-4 text-right text-sm font-bold text-red-600">
+                    {formatCurrency(monthlyData.reduce((sum, m) => sum + m.ueberfaellig, 0))}
+                  </td>
+                  <td className="px-6 py-4 text-center text-sm font-bold text-gray-900">
+                    {monthlyData.reduce((sum, m) => sum + m.anzahlRechnungen, 0)}
+                  </td>
+                  <td className="px-6 py-4"></td>
+                </tr>
+              </tfoot>
+            </table>
           </div>
         )}
       </div>
     </div>
   )
 }
-
