@@ -58,6 +58,18 @@ export async function GET() {
       }
     })
 
+    // Berechne bezahlte Beträge
+    let totalPaidAmount = 0
+    invoices.forEach(invoice => {
+      const status = calculateInvoiceStatus({
+        status: invoice.status,
+        due_date: invoice.due_date
+      })
+      if (status === 'paid') {
+        totalPaidAmount += parseFloat(invoice.amount as any)
+      }
+    })
+
     return NextResponse.json({
       total_invoices: invoices.length,
       open_invoices: openCount,
@@ -65,6 +77,7 @@ export async function GET() {
       paid_invoices: paidCount,
       total_open_amount: totalOpenAmount,
       total_overdue_amount: totalOverdueAmount,
+      total_paid_amount: totalPaidAmount,
     })
   } catch (error) {
     console.error('Error fetching status:', error)

@@ -8,23 +8,26 @@ import KPICard from '@/components/KPICard'
 import StatusBadge from '@/components/StatusBadge'
 import { 
   Wallet, 
-  TrendingDown, 
   FileText, 
   ArrowRight,
   Clock,
   AlertTriangle,
-  RefreshCw
+  RefreshCw,
+  CheckCircle
 } from 'lucide-react'
 import Link from 'next/link'
 
 interface DashboardStats {
-  currentBalance: number
-  burnRate: number
-  burnRateChange: number
-  openReceivables: number
-  openReceivablesCount: number
-  overdueReceivables: number
+  totalAmount: number
+  paidAmount: number
+  pendingAmount: number
+  overdueAmount: number
+  paidCount: number
+  pendingCount: number
   overdueCount: number
+  paidPercentage: number
+  pendingPercentage: number
+  overduePercentage: number
 }
 
 interface RecentReceivable {
@@ -38,13 +41,16 @@ interface RecentReceivable {
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats>({
-    currentBalance: 125430.50, // TODO: Aus Bankkonto-Integration
-    burnRate: -8500, // TODO: Berechnen aus Transaktionen
-    burnRateChange: -12.5,
-    openReceivables: 0,
-    openReceivablesCount: 0,
-    overdueReceivables: 0,
-    overdueCount: 0
+    totalAmount: 0,
+    paidAmount: 0,
+    pendingAmount: 0,
+    overdueAmount: 0,
+    paidCount: 0,
+    pendingCount: 0,
+    overdueCount: 0,
+    paidPercentage: 0,
+    pendingPercentage: 0,
+    overduePercentage: 0
   })
 
   const [recentReceivables, setRecentReceivables] = useState<RecentReceivable[]>([])
@@ -71,9 +77,16 @@ export default function DashboardPage() {
       if (!receivablesRes.ok) throw new Error('Fehler beim Laden der Forderungen')
       const receivablesData = await receivablesRes.json()
 
+      // Berechne Statistiken
+      const totalAmount = statusData.total_open_amount + statusData.total_overdue_amount + 
+                          (statusData.total_paid_amount || 0)
+      const paidAmount = statusData.total_paid_amount || 0
+      const pendingAmount = statusData.total_open_amount
+      const overdueAmount = statusData.total_overdue_amount
+
       // Filtere nur offene und überfällige, sortiert nach Dringlichkeit
       const openAndOverdue = receivablesData
-        .filter((r: any) => r.status === 'open' || r.status === 'overdue')
+        .filter((r: any) => r.status === 'pending' || r.status === 'overdue')
         .sort((a: any, b: any) => {
           // Überfällige zuerst
           if (a.status === 'overdue' && b.status !== 'overdue') return -1
@@ -95,11 +108,16 @@ export default function DashboardPage() {
         })
 
       setStats({
-        ...stats,
-        openReceivables: statusData.total_open_amount,
-        openReceivablesCount: statusData.open_invoices,
-        overdueReceivables: statusData.total_overdue_amount,
-        overdueCount: statusData.overdue_invoices
+        totalAmount,
+        paidAmount,
+        pendingAmount,
+        overdueAmount,
+        paidCount: statusData.paid_invoices,
+        pendingCount: statusData.open_invoices,
+        overdueCount: statusData.overdue_invoices,
+        paidPercentage: totalAmount > 0 ? (paidAmount / totalAmount) * 100 : 0,
+        pendingPercentage: totalAmount > 0 ? (pendingAmount / totalAmount) * 100 : 0,
+        overduePercentage: totalAmount > 0 ? (overdueAmount / totalAmount) * 100 : 0
       })
 
       setRecentReceivables(openAndOverdue)
@@ -189,40 +207,83 @@ export default function DashboardPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard
-          title="Aktueller Kontostand"
-          value={formatCurrency(stats.currentBalance)}
-          icon={Wallet}
-          color="amber"
-          subtitle="Hauptkonto"
-        />
-        
-        <KPICard
-          title="Burn Rate"
-          value={formatCurrency(stats.burnRate)}
-          change={stats.burnRateChange}
-          changeLabel="vs. letzter Monat"
-          icon={TrendingDown}
-          color="red"
-          trend="down"
-        />
-        
-        <KPICard
-          title="Offene Forderungen"
-          value={formatCurrency(stats.openReceivables)}
-          icon={FileText}
-          color="blue"
-          subtitle={`${stats.openReceivablesCount} Rechnungen`}
-        />
-        
-        <KPICard
-          title="Überfällige Forderungen"
-          value={formatCurrency(stats.overdueReceivables)}
-          icon={AlertTriangle}
-          color="red"
-          subtitle={`${stats.overdueCount} Rechnungen`}
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Gesamtumsatz mit Breakdown */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 lg:col-span-2">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+              <Wallet className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600 font-medium">Gesamtumsatz</p>
+              <p className="text-3xl font-bold text-gray-900 tabular-nums">{formatCurrency(stats.totalAmount)}</p>
+            </div>
+          </div>
+          
+          <div className="space-y-2.5 pl-13">
+            {/* Bezahlt */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                <span className="text-sm text-gray-700">Bezahlt</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-bold text-emerald-600 tabular-nums min-w-[120px] text-right">
+                  {formatCurrency(stats.paidAmount)}
+                </span>
+                <span className="text-xs text-gray-500 tabular-nums w-[45px] text-right">
+                  ({stats.paidPercentage.toFixed(0)}%)
+                </span>
+              </div>
+            </div>
+            
+            {/* Offen */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                <span className="text-sm text-gray-700">Offen</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-bold text-amber-600 tabular-nums min-w-[120px] text-right">
+                  {formatCurrency(stats.pendingAmount)}
+                </span>
+                <span className="text-xs text-gray-500 tabular-nums w-[45px] text-right">
+                  ({stats.pendingPercentage.toFixed(0)}%)
+                </span>
+              </div>
+            </div>
+            
+            {/* Überfällig */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                <span className="text-sm text-gray-700">Überfällig</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-bold text-red-600 tabular-nums min-w-[120px] text-right">
+                  {formatCurrency(stats.overdueAmount)}
+                </span>
+                <span className="text-xs text-gray-500 tabular-nums w-[45px] text-right">
+                  ({stats.overduePercentage.toFixed(0)}%)
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Überfällige Forderungen (separate Warnung) */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600 font-medium">Überfällig</p>
+              <p className="text-2xl font-bold text-red-600 tabular-nums">{formatCurrency(stats.overdueAmount)}</p>
+            </div>
+          </div>
+          <p className="text-xs text-gray-500 pl-13">{stats.overdueCount} Rechnungen</p>
+        </div>
       </div>
 
       {/* Two Column Layout */}
@@ -272,24 +333,26 @@ export default function DashboardPage() {
                       onClick={() => window.location.href = `/dashboard/forderungen/${receivable.id}`}
                     >
                       <td className="px-5 py-3">
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">{receivable.customer}</p>
+                        <div className="max-w-[200px]">
+                          <p className="text-sm font-medium text-gray-900 truncate">{receivable.customer}</p>
                           <p className="text-xs text-gray-500 mt-0.5">{receivable.id}</p>
                         </div>
                       </td>
                       <td className="px-5 py-3 text-right">
-                        <p className="text-sm font-semibold text-gray-900">{formatCurrency(receivable.amount)}</p>
+                        <p className="text-sm font-semibold text-gray-900 tabular-nums min-w-[100px]">
+                          {formatCurrency(receivable.amount)}
+                        </p>
                       </td>
                       <td className="px-5 py-3">
                         <div>
-                          <p className="text-sm text-gray-900">{formatDate(receivable.dueDate)}</p>
+                          <p className="text-sm text-gray-900 tabular-nums">{formatDate(receivable.dueDate)}</p>
                           {receivable.status === 'overdue' && receivable.daysOverdue && (
-                            <p className="text-xs text-red-600 mt-0.5 font-medium">
+                            <p className="text-xs text-red-600 mt-0.5 font-medium tabular-nums">
                               {receivable.daysOverdue} Tage überfällig
                             </p>
                           )}
                           {receivable.status === 'open' && daysUntilDue <= 7 && daysUntilDue > 0 && (
-                            <p className="text-xs text-amber-600 mt-0.5 font-medium">
+                            <p className="text-xs text-amber-600 mt-0.5 font-medium tabular-nums">
                               In {daysUntilDue} Tagen fällig
                             </p>
                           )}

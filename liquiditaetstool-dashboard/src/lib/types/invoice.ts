@@ -16,6 +16,7 @@ export interface Invoice {
   pdf_url: string | null
   pdf_generated_at: string | null
   created_at: string
+  // customer_email removed - NOT stored in database
 }
 
 export interface InvoiceStats {

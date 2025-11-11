@@ -6,7 +6,7 @@ export const fetchCache = 'force-no-store'
 import { useEffect, useState } from 'react'
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import type { CashflowData, TimePeriod } from '@/lib/types/cashflow'
-import { TrendingUp, AlertTriangle, CheckCircle, Percent, RefreshCw, Wallet, DollarSign } from 'lucide-react'
+import { TrendingUp, AlertTriangle, CheckCircle, RefreshCw, Wallet } from 'lucide-react'
 
 export default function CashflowPage() {
   const [cashflowData, setCashflowData] = useState<CashflowData | null>(null)
@@ -60,10 +60,6 @@ export default function CashflowPage() {
     return formatCurrency(amount)
   }
 
-  const formatPercent = (value: number) => {
-    return `${value.toFixed(1)}%`
-  }
-
   // Custom Tooltip for Chart
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -71,7 +67,7 @@ export default function CashflowPage() {
         <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200">
           <p className="font-semibold text-gray-900 mb-2">{label}</p>
           {payload.map((entry: any, index: number) => (
-            <p key={index} style={{ color: entry.color }} className="text-sm">
+            <p key={index} style={{ color: entry.color }} className="text-sm tabular-nums">
               {entry.name}: <span className="font-bold">{formatCurrency(entry.value)}</span>
             </p>
           ))}
@@ -163,67 +159,66 @@ export default function CashflowPage() {
         </div>
       </div>
 
-      {/* KPI Cards */}
+      {/* KPI Cards - CLEAN DESIGN */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Offene Forderungen */}
-        <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl shadow-md p-6 text-white">
-          <div className="flex items-center justify-between mb-4">
-            <div className="bg-white/20 rounded-lg p-3">
-              <Wallet className="w-6 h-6" />
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+              <Wallet className="w-5 h-5 text-amber-600" />
             </div>
-            <TrendingUp className="w-5 h-5 opacity-60" />
+            <div>
+              <p className="text-sm text-gray-600">Offene Forderungen</p>
+              <p className="text-2xl font-bold text-gray-900 tabular-nums">{formatLargeNumber(summary.totalPending)}</p>
+            </div>
           </div>
-          <p className="text-sm text-white/80 font-medium">Offene Forderungen</p>
-          <p className="text-3xl font-bold mt-2">{formatLargeNumber(summary.totalPending)}</p>
-          <p className="text-xs text-white/70 mt-2">Ausstehende Zahlungen</p>
         </div>
 
         {/* Überfällige Rechnungen */}
-        <div className="bg-gradient-to-br from-red-500 to-rose-600 rounded-xl shadow-md p-6 text-white">
-          <div className="flex items-center justify-between mb-4">
-            <div className="bg-white/20 rounded-lg p-3">
-              <AlertTriangle className="w-6 h-6" />
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
             </div>
-            <span className="text-xs font-bold bg-white/20 px-2 py-1 rounded">
-              {formatPercent(summary.riskPercentage)}
-            </span>
+            <div>
+              <p className="text-sm text-gray-600">Überfällig</p>
+              <p className="text-2xl font-bold text-red-600 tabular-nums">{formatLargeNumber(summary.totalOverdue)}</p>
+            </div>
           </div>
-          <p className="text-sm text-white/80 font-medium">Überfällige Rechnungen</p>
-          <p className="text-3xl font-bold mt-2">{formatLargeNumber(summary.totalOverdue)}</p>
-          <p className="text-xs text-white/70 mt-2">Risiko-Betrag</p>
+          <p className="text-xs text-gray-500 mt-2">{summary.riskPercentage.toFixed(1)}% Risiko</p>
         </div>
 
         {/* Bezahlt diesen Monat */}
-        <div className="bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl shadow-md p-6 text-white">
-          <div className="flex items-center justify-between mb-4">
-            <div className="bg-white/20 rounded-lg p-3">
-              <CheckCircle className="w-6 h-6" />
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+              <CheckCircle className="w-5 h-5 text-emerald-600" />
             </div>
-            <DollarSign className="w-5 h-5 opacity-60" />
+            <div>
+              <p className="text-sm text-gray-600">Bezahlt (Monat)</p>
+              <p className="text-2xl font-bold text-emerald-600 tabular-nums">{formatLargeNumber(summary.paidThisMonth)}</p>
+            </div>
           </div>
-          <p className="text-sm text-white/80 font-medium">Bezahlt diesen Monat</p>
-          <p className="text-3xl font-bold mt-2">{formatLargeNumber(summary.paidThisMonth)}</p>
-          <p className="text-xs text-white/70 mt-2">Einnahmen im aktuellen Monat</p>
         </div>
 
         {/* Erfolgsrate */}
-        <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-md p-6 text-white">
-          <div className="flex items-center justify-between mb-4">
-            <div className="bg-white/20 rounded-lg p-3">
-              <Percent className="w-6 h-6" />
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+              <TrendingUp className="w-5 h-5 text-blue-600" />
             </div>
-            <TrendingUp className="w-5 h-5 opacity-60" />
+            <div>
+              <p className="text-sm text-gray-600">Erfolgsrate</p>
+              <p className="text-2xl font-bold text-blue-600 tabular-nums">
+                {((summary.totalPaid / (summary.totalPaid + summary.totalPending)) * 100).toFixed(0)}%
+              </p>
+            </div>
           </div>
-          <p className="text-sm text-white/80 font-medium">Erfolgsrate</p>
-          <p className="text-3xl font-bold mt-2">
-            {formatPercent((summary.totalPaid / (summary.totalPaid + summary.totalPending)) * 100)}
-          </p>
-          <p className="text-xs text-white/70 mt-2">Bezahlt vs. Erwartet</p>
         </div>
       </div>
 
-      {/* Chart */}
-      <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+      {/* Chart - CLEAN DESIGN */}
+      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
         <div className="mb-6">
           <h2 className="text-lg font-semibold text-gray-900">Monatlicher Cashflow</h2>
           <p className="text-sm text-gray-600 mt-1">Erwartete, tatsächliche und überfällige Einnahmen</p>
@@ -238,16 +233,16 @@ export default function CashflowPage() {
         ) : (
           <ResponsiveContainer width="100%" height={400}>
             <ComposedChart data={monthlyData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
               <XAxis 
                 dataKey="monthLabel" 
-                tick={{ fontSize: 12, fill: '#666' }}
+                tick={{ fontSize: 12, fill: '#6B7280' }}
                 angle={-45}
                 textAnchor="end"
                 height={80}
               />
               <YAxis 
-                tick={{ fontSize: 12, fill: '#666' }}
+                tick={{ fontSize: 12, fill: '#6B7280' }}
                 tickFormatter={(value) => formatLargeNumber(value)}
               />
               <Tooltip content={<CustomTooltip />} />
@@ -259,36 +254,36 @@ export default function CashflowPage() {
                 dataKey="erwarteteEinnahmen" 
                 fill="#10B981" 
                 name="Erwartete Einnahmen"
-                radius={[8, 8, 0, 0]}
+                radius={[4, 4, 0, 0]}
               />
               <Bar 
                 dataKey="tatsaechlicheEinnahmen" 
                 fill="#3B82F6" 
                 name="Tatsächliche Einnahmen"
-                radius={[8, 8, 0, 0]}
+                radius={[4, 4, 0, 0]}
               />
               <Bar 
                 dataKey="ueberfaellig" 
                 fill="#EF4444" 
                 name="Überfällig"
-                radius={[8, 8, 0, 0]}
+                radius={[4, 4, 0, 0]}
               />
               <Line 
                 type="monotone" 
                 dataKey="offeneForderungen" 
                 stroke="#F59E0B" 
-                strokeWidth={3}
+                strokeWidth={2}
                 name="Offene Forderungen"
-                dot={{ fill: '#F59E0B', r: 5 }}
+                dot={{ fill: '#F59E0B', r: 4 }}
               />
             </ComposedChart>
           </ResponsiveContainer>
         )}
       </div>
 
-      {/* Detailed Table */}
-      <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+      {/* Detailed Table - CLEAN DESIGN */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">Detaillierte Monatsübersicht</h2>
           <p className="text-sm text-gray-600 mt-1">Aufschlüsselung der Einnahmen pro Monat</p>
         </div>
@@ -300,27 +295,27 @@ export default function CashflowPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-900">
+              <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-amber-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Monat
                   </th>
-                  <th className="px-6 py-4 text-right text-xs font-bold text-amber-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Erwartet
                   </th>
-                  <th className="px-6 py-4 text-right text-xs font-bold text-amber-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Bezahlt
                   </th>
-                  <th className="px-6 py-4 text-right text-xs font-bold text-amber-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Offen
                   </th>
-                  <th className="px-6 py-4 text-right text-xs font-bold text-amber-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Überfällig
                   </th>
-                  <th className="px-6 py-4 text-center text-xs font-bold text-amber-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Anzahl
                   </th>
-                  <th className="px-6 py-4 text-center text-xs font-bold text-amber-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Status
                   </th>
                 </tr>
@@ -328,44 +323,51 @@ export default function CashflowPage() {
               <tbody className="divide-y divide-gray-200">
                 {monthlyData.map((month, index) => {
                   const statusColor = 
-                    month.ueberfaellig > 0 ? 'text-red-600' :
-                    month.tatsaechlicheEinnahmen > month.erwarteteEinnahmen ? 'text-green-600' :
-                    'text-amber-600'
-                  
-                  const statusIcon = 
-                    month.ueberfaellig > 0 ? '⚠️' :
-                    month.tatsaechlicheEinnahmen > month.erwarteteEinnahmen ? '✅' :
-                    '📊'
+                    month.ueberfaellig > 0 ? 'bg-red-50' :
+                    month.tatsaechlicheEinnahmen > month.erwarteteEinnahmen ? 'bg-emerald-50' :
+                    'bg-gray-50'
 
                   return (
                     <tr 
                       key={month.month}
                       className={`hover:bg-amber-50 transition-colors ${
-                        index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                        index % 2 === 0 ? 'bg-white' : statusColor
                       }`}
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-semibold text-gray-900">{month.monthLabel}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="text-sm font-bold text-green-600">{formatCurrency(month.erwarteteEinnahmen)}</div>
+                        <div className="text-sm font-bold text-emerald-600 tabular-nums">{formatCurrency(month.erwarteteEinnahmen)}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="text-sm font-bold text-blue-600">{formatCurrency(month.tatsaechlicheEinnahmen)}</div>
+                        <div className="text-sm font-bold text-blue-600 tabular-nums">{formatCurrency(month.tatsaechlicheEinnahmen)}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="text-sm font-bold text-amber-600">{formatCurrency(month.offeneForderungen)}</div>
+                        <div className="text-sm font-bold text-amber-600 tabular-nums">{formatCurrency(month.offeneForderungen)}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="text-sm font-bold text-red-600">{formatCurrency(month.ueberfaellig)}</div>
+                        <div className="text-sm font-bold text-red-600 tabular-nums">{formatCurrency(month.ueberfaellig)}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
-                          {month.anzahlRechnungen} Rechnungen
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 tabular-nums">
+                          {month.anzahlRechnungen}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <span className={`text-2xl ${statusColor}`}>{statusIcon}</span>
+                        {month.ueberfaellig > 0 ? (
+                          <span className="inline-flex items-center px-2 py-1 rounded-md bg-red-50 text-red-700 text-xs font-medium">
+                            Risiko
+                          </span>
+                        ) : month.tatsaechlicheEinnahmen > month.erwarteteEinnahmen ? (
+                          <span className="inline-flex items-center px-2 py-1 rounded-md bg-emerald-50 text-emerald-700 text-xs font-medium">
+                            Gut
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-1 rounded-md bg-gray-50 text-gray-700 text-xs font-medium">
+                            Normal
+                          </span>
+                        )}
                       </td>
                     </tr>
                   )
@@ -374,19 +376,19 @@ export default function CashflowPage() {
               <tfoot className="bg-gray-50 border-t-2 border-gray-300">
                 <tr>
                   <td className="px-6 py-4 text-sm font-bold text-gray-900">Gesamt</td>
-                  <td className="px-6 py-4 text-right text-sm font-bold text-green-600">
+                  <td className="px-6 py-4 text-right text-sm font-bold text-emerald-600 tabular-nums">
                     {formatCurrency(monthlyData.reduce((sum, m) => sum + m.erwarteteEinnahmen, 0))}
                   </td>
-                  <td className="px-6 py-4 text-right text-sm font-bold text-blue-600">
+                  <td className="px-6 py-4 text-right text-sm font-bold text-blue-600 tabular-nums">
                     {formatCurrency(monthlyData.reduce((sum, m) => sum + m.tatsaechlicheEinnahmen, 0))}
                   </td>
-                  <td className="px-6 py-4 text-right text-sm font-bold text-amber-600">
+                  <td className="px-6 py-4 text-right text-sm font-bold text-amber-600 tabular-nums">
                     {formatCurrency(monthlyData.reduce((sum, m) => sum + m.offeneForderungen, 0))}
                   </td>
-                  <td className="px-6 py-4 text-right text-sm font-bold text-red-600">
+                  <td className="px-6 py-4 text-right text-sm font-bold text-red-600 tabular-nums">
                     {formatCurrency(monthlyData.reduce((sum, m) => sum + m.ueberfaellig, 0))}
                   </td>
-                  <td className="px-6 py-4 text-center text-sm font-bold text-gray-900">
+                  <td className="px-6 py-4 text-center text-sm font-bold text-gray-900 tabular-nums">
                     {monthlyData.reduce((sum, m) => sum + m.anzahlRechnungen, 0)}
                   </td>
                   <td className="px-6 py-4"></td>

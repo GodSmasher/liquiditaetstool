@@ -52,7 +52,6 @@ export async function GET(
       id: invoice.invoice_number,
       invoice_number: invoice.invoice_number,
       customer_name: invoice.customer_name,
-      customer_email: 'kontakt@kunde.de', // TODO: Aus Datenbank wenn vorhanden
       customer_address: invoice.customer_address || 'Keine Adresse hinterlegt',
       amount: parseFloat(invoice.amount as any),
       due_date: invoice.due_date,

@@ -86,6 +86,33 @@ export async function GET(request: Request) {
       amount: parseFloat(invoice.amount as any)
     }))
 
+    // DATA VALIDATION LOGGING (Development Only)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('═══ CASHFLOW DATA VALIDATION ═══')
+      console.log('Total Invoices:', invoices.length)
+      console.log('Total Amount:', processedInvoices.reduce((sum, inv) => sum + inv.amount, 0).toFixed(2), '€')
+      console.log('By Status:', {
+        paid: {
+          count: processedInvoices.filter(i => i.calculatedStatus === 'paid').length,
+          sum: processedInvoices.filter(i => i.calculatedStatus === 'paid').reduce((sum, i) => sum + i.amount, 0).toFixed(2) + ' €'
+        },
+        pending: {
+          count: processedInvoices.filter(i => i.calculatedStatus === 'pending').length,
+          sum: processedInvoices.filter(i => i.calculatedStatus === 'pending').reduce((sum, i) => sum + i.amount, 0).toFixed(2) + ' €'
+        },
+        overdue: {
+          count: processedInvoices.filter(i => i.calculatedStatus === 'overdue').length,
+          sum: processedInvoices.filter(i => i.calculatedStatus === 'overdue').reduce((sum, i) => sum + i.amount, 0).toFixed(2) + ' €'
+        }
+      })
+      console.log('Date Range:', {
+        oldest: invoices[invoices.length - 1]?.invoice_date || invoices[invoices.length - 1]?.created_at,
+        newest: invoices[0]?.invoice_date || invoices[0]?.created_at
+      })
+      console.log('Period Filter:', period, '(', months, 'months )')
+      console.log('═══════════════════════════════')
+    }
+
     // Group by month
     const monthlyMap = new Map<string, MonthlyData>()
 

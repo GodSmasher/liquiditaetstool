@@ -21,7 +21,6 @@ interface InvoiceDetails {
   id: string
   invoice_number: string
   customer_name: string
-  customer_email: string
   customer_address: string
   amount: number
   due_date: string
@@ -326,10 +325,6 @@ export default function InvoiceDetailPage() {
               <div>
                 <p className="text-sm text-gray-600">Name</p>
                 <p className="text-lg font-semibold text-gray-900">{invoice.customer_name}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">E-Mail</p>
-                <p className="text-gray-900">{invoice.customer_email}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-600">Adresse</p>
