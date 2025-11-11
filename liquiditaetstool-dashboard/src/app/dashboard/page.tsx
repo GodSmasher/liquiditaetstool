@@ -367,7 +367,7 @@ export default function DashboardPage() {
                               {receivable.daysOverdue} Tage überfällig
                             </p>
                           )}
-                          {receivable.status === 'open' && daysUntilDue <= 7 && daysUntilDue > 0 && (
+                          {receivable.status === 'pending' && daysUntilDue <= 7 && daysUntilDue > 0 && (
                             <p className="text-xs text-amber-600 mt-0.5 font-medium tabular-nums">
                               In {daysUntilDue} Tagen fällig
                             </p>
