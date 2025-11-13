@@ -16,7 +16,8 @@ import {
   BarChart3,
   Menu,
   X,
-  Zap
+  Zap,
+  Link as LinkIcon
 } from 'lucide-react'
 
 interface MenuItem {
@@ -44,6 +45,7 @@ export default function Sidebar() {
     { name: 'Dashboard', href: '/dashboard', icon: LayoutGrid },
     { name: 'Cashflow', href: '/dashboard/cashflow', icon: TrendingUp },
     { name: 'Forderungen', href: '/dashboard/forderungsmanagement', icon: FileText },
+    { name: 'Buchungsprüfung', href: '/dashboard/buchungspruefung', icon: LinkIcon },
     { name: 'Transaktionen', href: '/dashboard/transaktionen', icon: ArrowLeftRight },
     { name: 'Rechnungen', href: '/dashboard/rechnungen', icon: Receipt },
     { name: 'Planwerte', href: '/dashboard/planwerte', icon: Calendar },
