@@ -55,7 +55,7 @@ export default function BuchungspruefungPage() {
 
   const handleUpdateMatch = async (
     matchId: string, 
-    status: 'matched' | 'ignored', 
+    status?: 'matched' | 'ignored' | 'pending', 
     invoiceId?: string,
     notes?: string
   ) => {
@@ -72,9 +72,13 @@ export default function BuchungspruefungPage() {
       await loadData()
       
       // Show success message
-      alert(status === 'matched' 
-        ? 'Zahlung als verknüpft markiert. Bitte in SevDesk final verknüpfen.' 
-        : 'Zahlung wurde ignoriert.')
+      if (status === 'matched') {
+        alert('Zahlung als verknüpft markiert. Bitte in SevDesk final verknüpfen.')
+      } else if (status === 'ignored') {
+        alert('Zahlung wurde ignoriert.')
+      } else if (!status && notes !== undefined) {
+        alert('Notiz wurde gespeichert.')
+      }
     } catch (err: any) {
       alert('Fehler: ' + err.message)
       console.error('Error updating match:', err)
@@ -89,7 +93,7 @@ export default function BuchungspruefungPage() {
   const saveNote = async () => {
     if (!noteModal) return
     
-    await handleUpdateMatch(noteModal.matchId, 'pending', undefined, note)
+    await handleUpdateMatch(noteModal.matchId, undefined, undefined, note)
     setNoteModal(null)
     setNote('')
   }

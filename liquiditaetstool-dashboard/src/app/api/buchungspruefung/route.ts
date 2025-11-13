@@ -74,17 +74,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Build update object dynamically
+    const updateData: any = {
+      updated_at: new Date().toISOString()
+    }
+
+    // Only update status if provided and not 'pending'
+    if (status && status !== 'pending') {
+      updateData.status = status
+      updateData.matched_by = user.email
+      updateData.matched_at = new Date().toISOString()
+    }
+
+    // Update invoice ID if provided
+    if (invoiceId !== undefined) {
+      updateData.matched_invoice_id = invoiceId
+    }
+
+    // Update notes if provided
+    if (notes !== undefined) {
+      updateData.notes = notes
+    }
+
     // Update match
     const { data, error } = await supabase
       .from('payment_matches')
-      .update({
-        status,
-        matched_invoice_id: invoiceId,
-        matched_by: user.email,
-        matched_at: new Date().toISOString(),
-        notes,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', matchId)
       .select()
       .single()

@@ -52,7 +52,7 @@ export interface PaymentMatchesResponse {
 
 export interface UpdateMatchRequest {
   matchId: string
-  status: 'matched' | 'ignored'
+  status?: 'matched' | 'ignored' | 'pending'
   invoiceId?: string | null
   notes?: string
 }
