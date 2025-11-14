@@ -6,6 +6,10 @@
  * - Amount match (50 points)
  * - Date proximity (30 points)
  * - Reference text match (20 points)
+ * 
+ * IMPORTANT: This algorithm works with ALL invoices passed to it.
+ * No date filtering should be applied when loading invoices for matching.
+ * Payments can be for old invoices (2020-2024), so complete history is needed.
  */
 
 interface Payment {
@@ -71,6 +75,10 @@ function daysBetween(date1: string, date2: string): number {
 
 /**
  * Find best matching invoice for a payment
+ * 
+ * @param payment - Payment to match
+ * @param invoices - ALL invoices from database (no date filtering!)
+ * @returns Best match with confidence score, or null if no good match found
  */
 export function findBestMatch(
   payment: Payment,
@@ -96,6 +104,11 @@ export function findBestMatch(
 
 /**
  * Find all possible matches for a payment (for uncertain cases)
+ * 
+ * @param payment - Payment to match
+ * @param invoices - ALL invoices from database (no date filtering!)
+ * @param minScore - Minimum confidence score (default: 40)
+ * @returns Array of possible matches sorted by score descending
  */
 export function findPossibleMatches(
   payment: Payment,
