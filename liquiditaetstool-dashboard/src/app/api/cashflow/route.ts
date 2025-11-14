@@ -5,13 +5,10 @@ export const revalidate = 60 // Cache for 60 seconds
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { calculateInvoiceStatus } from '@/lib/utils/invoice-helpers'
-import type { MonthlyData, CashflowData, CashflowSummary } from '@/lib/types/cashflow'
+import type { DailyData, CashflowData, CashflowSummary } from '@/lib/types/cashflow'
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const period = searchParams.get('period') || '6months'
-
     const supabase = await createClient()
 
     // Fetch all invoices
@@ -32,49 +29,29 @@ export async function GET(request: Request) {
       return NextResponse.json({
         success: true,
         data: {
-          monthlyData: [],
+          dailyData: [],
           summary: {
-            totalPending: 0,
-            totalPaid: 0,
+            totalExpected: 0,
+            totalOpen: 0,
             totalOverdue: 0,
-            riskPercentage: 0,
-            paidThisMonth: 0,
-            avgInvoiceAmount: 0
+            todayExpected: 0,
+            tomorrowExpected: 0,
+            thisWeekExpected: 0,
+            nextWeekExpected: 0
           },
           period: {
-            startDate: new Date().toISOString(),
-            endDate: new Date().toISOString(),
-            months: 0
+            from: new Date().toISOString().split('T')[0],
+            to: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
           }
         }
       })
     }
 
-    // Calculate date range based on period
+    // Calculate date range: next 14 days
     const today = new Date()
-    const startDate = new Date(today)
-    let endDate = new Date(today)
-    let months = 6
-
-    switch (period) {
-      case '3months':
-        months = 3
-        endDate.setMonth(endDate.getMonth() + 3)
-        break
-      case '6months':
-        months = 6
-        endDate.setMonth(endDate.getMonth() + 6)
-        break
-      case '12months':
-        months = 12
-        endDate.setMonth(endDate.getMonth() + 12)
-        break
-      case 'ytd':
-        startDate.setMonth(0, 1) // Jan 1
-        endDate.setMonth(11, 31) // Dec 31
-        months = 12
-        break
-    }
+    today.setHours(0, 0, 0, 0)
+    const twoWeeksFromNow = new Date(today)
+    twoWeeksFromNow.setDate(today.getDate() + 14)
 
     // Process invoices with calculated status
     const processedInvoices = invoices.map(invoice => ({
@@ -86,146 +63,113 @@ export async function GET(request: Request) {
       amount: parseFloat(invoice.amount as any)
     }))
 
-    // DATA VALIDATION LOGGING (Development Only)
-    if (process.env.NODE_ENV === 'development') {
-      console.log('═══ CASHFLOW DATA VALIDATION ═══')
-      console.log('Total Invoices:', invoices.length)
-      console.log('Total Amount:', processedInvoices.reduce((sum, inv) => sum + inv.amount, 0).toFixed(2), '€')
-      console.log('By Status:', {
-        paid: {
-          count: processedInvoices.filter(i => i.calculatedStatus === 'paid').length,
-          sum: processedInvoices.filter(i => i.calculatedStatus === 'paid').reduce((sum, i) => sum + i.amount, 0).toFixed(2) + ' €'
-        },
-        pending: {
-          count: processedInvoices.filter(i => i.calculatedStatus === 'pending').length,
-          sum: processedInvoices.filter(i => i.calculatedStatus === 'pending').reduce((sum, i) => sum + i.amount, 0).toFixed(2) + ' €'
-        },
-        overdue: {
-          count: processedInvoices.filter(i => i.calculatedStatus === 'overdue').length,
-          sum: processedInvoices.filter(i => i.calculatedStatus === 'overdue').reduce((sum, i) => sum + i.amount, 0).toFixed(2) + ' €'
-        }
-      })
-      console.log('Date Range:', {
-        oldest: invoices[invoices.length - 1]?.invoice_date || invoices[invoices.length - 1]?.created_at,
-        newest: invoices[0]?.invoice_date || invoices[0]?.created_at
-      })
-      console.log('Period Filter:', period, '(', months, 'months )')
-    }
+    // Filter: Only invoices with due_date in next 14 days
+    const relevantInvoices = processedInvoices.filter(invoice => {
+      const dueDate = new Date(invoice.due_date)
+      dueDate.setHours(0, 0, 0, 0)
+      return dueDate >= today && dueDate <= twoWeeksFromNow
+    })
 
-    // IMPROVED: Group by month using reduce for better aggregation
-    const monthlyMap: Record<string, MonthlyData> = {}
+    // Generate all days in the 14-day period
+    const dailyMap: Record<string, DailyData> = {}
+    const todayStr = today.toISOString().split('T')[0]
+    
+    for (let i = 0; i < 14; i++) {
+      const date = new Date(today)
+      date.setDate(today.getDate() + i)
+      const dateStr = date.toISOString().split('T')[0]
+      const weekday = date.toLocaleDateString('de-DE', { weekday: 'long' })
+      const weekdayShort = date.toLocaleDateString('de-DE', { weekday: 'short' })
+      const day = date.getDate()
+      const month = date.getMonth() + 1
+      const dateLabel = `${weekdayShort} ${day}.${month.toString().padStart(2, '0')}`
+      
+      const isToday = i === 0
+      const dayOfWeek = date.getDay()
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
 
-    // Generate all months in range first
-    for (let i = 0; i < months; i++) {
-      const date = new Date(startDate)
-      date.setMonth(date.getMonth() + i)
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-      const monthLabel = date.toLocaleDateString('de-DE', { month: 'short', year: 'numeric' })
-
-      monthlyMap[monthKey] = {
-        month: monthKey,
-        monthLabel,
+      dailyMap[dateStr] = {
+        date: dateStr,
+        dateLabel,
+        weekday,
         erwarteteEinnahmen: 0,
-        tatsaechlicheEinnahmen: 0,
-        offeneForderungen: 0,
+        bezahlt: 0,
+        offen: 0,
         ueberfaellig: 0,
         anzahlRechnungen: 0,
-        erfolgsrate: 0
+        isToday,
+        isWeekend
       }
     }
 
-    // Aggregate invoices into months
-    processedInvoices.forEach(invoice => {
+    // Aggregate invoices into days
+    relevantInvoices.forEach(invoice => {
       const dueDate = new Date(invoice.due_date)
-      const monthKey = `${dueDate.getFullYear()}-${String(dueDate.getMonth() + 1).padStart(2, '0')}`
+      dueDate.setHours(0, 0, 0, 0)
+      const dateStr = dueDate.toISOString().split('T')[0]
       
-      // Skip if month is not in our range
-      if (!monthlyMap[monthKey]) return
+      // Skip if date is not in our range
+      if (!dailyMap[dateStr]) return
 
       const amount = invoice.amount
-      monthlyMap[monthKey].anzahlRechnungen++
+      dailyMap[dateStr].anzahlRechnungen++
 
       if (invoice.calculatedStatus === 'paid') {
-        monthlyMap[monthKey].tatsaechlicheEinnahmen += amount
-        monthlyMap[monthKey].erwarteteEinnahmen += amount // Paid is part of expected
+        dailyMap[dateStr].bezahlt += amount
+        dailyMap[dateStr].erwarteteEinnahmen += amount // Paid is part of expected
       } else if (invoice.calculatedStatus === 'pending') {
-        monthlyMap[monthKey].erwarteteEinnahmen += amount
-        monthlyMap[monthKey].offeneForderungen += amount
+        dailyMap[dateStr].erwarteteEinnahmen += amount
+        dailyMap[dateStr].offen += amount
       } else if (invoice.calculatedStatus === 'overdue') {
-        monthlyMap[monthKey].erwarteteEinnahmen += amount
-        monthlyMap[monthKey].ueberfaellig += amount
-        monthlyMap[monthKey].offeneForderungen += amount
+        dailyMap[dateStr].erwarteteEinnahmen += amount
+        dailyMap[dateStr].ueberfaellig += amount
+        dailyMap[dateStr].offen += amount
       }
     })
 
-    // Calculate success rate for each month
-    Object.values(monthlyMap).forEach(monthData => {
-      const total = monthData.erwarteteEinnahmen
-      if (total > 0) {
-        monthData.erfolgsrate = (monthData.tatsaechlicheEinnahmen / total) * 100
-      }
-    })
-
-    // Convert to array and sort by month
-    const monthlyData = Object.values(monthlyMap).sort((a, b) => 
-      a.month.localeCompare(b.month)
+    // Convert to array and sort by date
+    const dailyData = Object.values(dailyMap).sort((a, b) => 
+      a.date.localeCompare(b.date)
     )
 
     // Calculate summary statistics
-    const totalPending = processedInvoices
-      .filter(inv => inv.calculatedStatus === 'pending')
-      .reduce((sum, inv) => sum + inv.amount, 0)
+    const totalExpected = dailyData.reduce((sum, d) => sum + d.erwarteteEinnahmen, 0)
+    const totalOpen = dailyData.reduce((sum, d) => sum + d.offen, 0)
+    const totalOverdue = dailyData.reduce((sum, d) => sum + d.ueberfaellig, 0)
+    
+    // Today and tomorrow
+    const todayData = dailyData.find(d => d.isToday)
+    const tomorrowData = dailyData.find((d, i) => i === 1)
+    const todayExpected = todayData?.erwarteteEinnahmen || 0
+    const tomorrowExpected = tomorrowData?.erwarteteEinnahmen || 0
 
-    const totalPaid = processedInvoices
-      .filter(inv => inv.calculatedStatus === 'paid')
-      .reduce((sum, inv) => sum + inv.amount, 0)
-
-    const totalOverdue = processedInvoices
-      .filter(inv => inv.calculatedStatus === 'overdue')
-      .reduce((sum, inv) => sum + inv.amount, 0)
-
-    const currentMonth = today.getMonth()
-    const currentYear = today.getFullYear()
-    const paidThisMonth = processedInvoices
-      .filter(inv => {
-        const date = new Date(inv.invoice_date || inv.created_at)
-        return inv.calculatedStatus === 'paid' && 
-               date.getMonth() === currentMonth && 
-               date.getFullYear() === currentYear
-      })
-      .reduce((sum, inv) => sum + inv.amount, 0)
-
-    const avgInvoiceAmount = invoices.length > 0 
-      ? processedInvoices.reduce((sum, inv) => sum + inv.amount, 0) / invoices.length 
-      : 0
-
-    const riskPercentage = (totalPending + totalOverdue) > 0
-      ? (totalOverdue / (totalPending + totalOverdue)) * 100
-      : 0
+    // This week (first 7 days) and next week (days 8-14)
+    const thisWeekExpected = dailyData.slice(0, 7).reduce((sum, d) => sum + d.erwarteteEinnahmen, 0)
+    const nextWeekExpected = dailyData.slice(7, 14).reduce((sum, d) => sum + d.erwarteteEinnahmen, 0)
 
     const summary: CashflowSummary = {
-      totalPending,
-      totalPaid,
+      totalExpected,
+      totalOpen,
       totalOverdue,
-      riskPercentage,
-      paidThisMonth,
-      avgInvoiceAmount
+      todayExpected,
+      tomorrowExpected,
+      thisWeekExpected,
+      nextWeekExpected
     }
 
     const cashflowData: CashflowData = {
-      monthlyData,
+      dailyData,
       summary,
       period: {
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        months
+        from: today.toISOString().split('T')[0],
+        to: twoWeeksFromNow.toISOString().split('T')[0]
       }
     }
 
     // Debug output in development
     if (process.env.NODE_ENV === 'development') {
-      console.log('📊 Cashflow Monthly Data:', monthlyData.length, 'months')
-      console.log('First month:', monthlyData[0])
+      console.log('📊 Cashflow Daily Data:', dailyData.length, 'days')
+      console.log('Today:', todayData)
       console.log('Summary:', summary)
       console.log('═══════════════════════════════')
     }

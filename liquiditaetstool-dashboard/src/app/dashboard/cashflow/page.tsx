@@ -4,55 +4,33 @@ export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 
 import { useEffect, useState } from 'react'
-import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import type { CashflowData, TimePeriod } from '@/lib/types/cashflow'
-import { TrendingUp, AlertTriangle, CheckCircle, RefreshCw, Wallet } from 'lucide-react'
+import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts'
+import type { CashflowData } from '@/lib/types/cashflow'
+import { TrendingUp, AlertTriangle, CheckCircle, RefreshCw, Wallet, Calendar } from 'lucide-react'
 
 export default function CashflowPage() {
   const [cashflowData, setCashflowData] = useState<CashflowData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [period, setPeriod] = useState<TimePeriod>('6months')
 
   useEffect(() => {
     loadCashflowData()
-  }, [period])
+  }, [])
 
   const loadCashflowData = async () => {
     try {
       setLoading(true)
       setError(null)
 
-      const res = await fetch(`/api/cashflow?period=${period}`)
+      const res = await fetch('/api/cashflow')
       if (!res.ok) {
         throw new Error('Fehler beim Laden der Cashflow-Daten')
       }
 
       const data = await res.json()
       
-      // DEBUG LOGGING (Development Only)
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🔍 Cashflow API Response:', {
-          success: data.success,
-          monthlyDataLength: data.data?.monthlyData?.length || 0,
-          summary: data.data?.summary,
-          firstMonth: data.data?.monthlyData?.[0],
-          lastMonth: data.data?.monthlyData?.[data.data?.monthlyData?.length - 1]
-        })
-      }
-
       if (data.success && data.data) {
         setCashflowData(data.data)
-        
-        // Additional validation
-        if (process.env.NODE_ENV === 'development') {
-          console.log('✅ Cashflow Data Set:', {
-            months: data.data.monthlyData.length,
-            hasData: data.data.monthlyData.some((m: any) => 
-              m.erwarteteEinnahmen > 0 || m.tatsaechlicheEinnahmen > 0
-            )
-          })
-        }
       } else {
         throw new Error(data.error || 'Unbekannter Fehler')
       }
@@ -82,17 +60,33 @@ export default function CashflowPage() {
     return formatCurrency(amount)
   }
 
+  const formatFullDate = (dateStr: string) => {
+    const date = new Date(dateStr)
+    return date.toLocaleDateString('de-DE', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    })
+  }
+
   // Custom Tooltip for Chart
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
+      const data = payload[0].payload
       return (
         <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200">
-          <p className="font-semibold text-gray-900 mb-2">{label}</p>
+          <p className="font-semibold text-gray-900 mb-2">{formatFullDate(data.date)}</p>
           {payload.map((entry: any, index: number) => (
             <p key={index} style={{ color: entry.color }} className="text-sm tabular-nums">
               {entry.name}: <span className="font-bold">{formatCurrency(entry.value)}</span>
             </p>
           ))}
+          {data.anzahlRechnungen > 0 && (
+            <p className="text-xs text-gray-500 mt-2">
+              {data.anzahlRechnungen} Rechnung{data.anzahlRechnungen !== 1 ? 'en' : ''}
+            </p>
+          )}
         </div>
       )
     }
@@ -134,35 +128,15 @@ export default function CashflowPage() {
     )
   }
 
-  const { monthlyData, summary } = cashflowData
+  const { dailyData, summary } = cashflowData
 
   return (
     <div className="space-y-6">
-      {/* Debug Panel (Development Only) */}
-      {process.env.NODE_ENV === 'development' && cashflowData && (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-xs font-mono">
-          <p className="font-bold mb-2">🔍 Debug Info</p>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <p>Monate: {monthlyData.length}</p>
-              <p>Total Pending: {formatCurrency(summary.totalPending)}</p>
-              <p>Total Paid: {formatCurrency(summary.totalPaid)}</p>
-            </div>
-            <div>
-              <p>Total Overdue: {formatCurrency(summary.totalOverdue)}</p>
-              <p>Risk: {summary.riskPercentage.toFixed(1)}%</p>
-              <p>Paid This Month: {formatCurrency(summary.paidThisMonth)}</p>
-            </div>
-          </div>
-          <p className="mt-2 text-gray-600">Letzte Aktualisierung: {new Date().toLocaleTimeString('de-DE')}</p>
-        </div>
-      )}
-
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Cashflow-Prognose</h1>
-          <p className="text-sm text-gray-600 mt-0.5">Erwartete und tatsächliche Einnahmen im Überblick</p>
+          <p className="text-sm text-gray-600 mt-0.5">Nächste 2 Wochen - Tägliche Übersicht</p>
         </div>
         <button
           onClick={loadCashflowData}
@@ -174,114 +148,85 @@ export default function CashflowPage() {
         </button>
       </div>
 
-      {/* Period Filter */}
-      <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
-        <div className="flex items-center gap-3 flex-wrap">
-          <label className="text-sm font-medium text-gray-700">Zeitraum:</label>
-          <div className="flex gap-2">
-            {[
-              { value: '3months', label: 'Nächste 3 Monate' },
-              { value: '6months', label: 'Nächste 6 Monate' },
-              { value: '12months', label: 'Nächstes Jahr' },
-              { value: 'ytd', label: 'Dieses Jahr (YTD)' },
-            ].map((option) => (
-              <button
-                key={option.value}
-                onClick={() => setPeriod(option.value as TimePeriod)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors text-sm ${
-                  period === option.value
-                    ? 'bg-amber-500 text-gray-900'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* KPI Cards - CLEAN DESIGN */}
+      {/* KPI Cards - Updated for 2-week view */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Offene Forderungen */}
+        {/* Heute */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
-              <Wallet className="w-5 h-5 text-amber-600" />
+              <Calendar className="w-5 h-5 text-amber-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Offene Forderungen</p>
-              <p className="text-2xl font-bold text-gray-900 tabular-nums">{formatLargeNumber(summary.totalPending)}</p>
+              <p className="text-sm text-gray-600">Heute</p>
+              <p className="text-2xl font-bold text-gray-900 tabular-nums">{formatLargeNumber(summary.todayExpected)}</p>
             </div>
           </div>
         </div>
 
-        {/* Überfällige Rechnungen */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
-              <AlertTriangle className="w-5 h-5 text-red-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Überfällig</p>
-              <p className="text-2xl font-bold text-red-600 tabular-nums">{formatLargeNumber(summary.totalOverdue)}</p>
-            </div>
-          </div>
-          <p className="text-xs text-gray-500 mt-2">{summary.riskPercentage.toFixed(1)}% Risiko</p>
-        </div>
-
-        {/* Bezahlt diesen Monat */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
-              <CheckCircle className="w-5 h-5 text-emerald-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Bezahlt (Monat)</p>
-              <p className="text-2xl font-bold text-emerald-600 tabular-nums">{formatLargeNumber(summary.paidThisMonth)}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Erfolgsrate */}
+        {/* Morgen */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-              <TrendingUp className="w-5 h-5 text-blue-600" />
+              <Calendar className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Erfolgsrate</p>
-              <p className="text-2xl font-bold text-blue-600 tabular-nums">
-                {((summary.totalPaid / (summary.totalPaid + summary.totalPending)) * 100).toFixed(0)}%
-              </p>
+              <p className="text-sm text-gray-600">Morgen</p>
+              <p className="text-2xl font-bold text-gray-900 tabular-nums">{formatLargeNumber(summary.tomorrowExpected)}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Diese Woche */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+              <TrendingUp className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Diese Woche</p>
+              <p className="text-2xl font-bold text-emerald-600 tabular-nums">{formatLargeNumber(summary.thisWeekExpected)}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Nächste 2 Wochen */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0">
+              <Wallet className="w-5 h-5 text-purple-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Nächste 2 Wochen</p>
+              <p className="text-2xl font-bold text-purple-600 tabular-nums">{formatLargeNumber(summary.totalExpected)}</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Chart - CLEAN DESIGN */}
+      {/* Chart - Daily View */}
       <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
         <div className="mb-6">
-          <h2 className="text-lg font-semibold text-gray-900">Monatlicher Cashflow</h2>
-          <p className="text-sm text-gray-600 mt-1">Erwartete, tatsächliche und überfällige Einnahmen</p>
+          <h2 className="text-lg font-semibold text-gray-900">Täglicher Cashflow (Nächste 2 Wochen)</h2>
+          <p className="text-sm text-gray-600 mt-1">Erwartete, bezahlte und überfällige Einnahmen pro Tag</p>
         </div>
 
-        {monthlyData.length === 0 ? (
+        {dailyData.length === 0 ? (
           <div className="text-center py-12">
             <AlertTriangle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Keine Daten verfügbar</h3>
-            <p className="text-gray-600">Es wurden noch keine Rechnungen für diesen Zeitraum erstellt.</p>
+            <p className="text-gray-600">Es wurden noch keine Rechnungen für die nächsten 14 Tage erstellt.</p>
           </div>
         ) : (
           <ResponsiveContainer width="100%" height={400}>
-            <ComposedChart data={monthlyData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+            <ComposedChart data={dailyData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
               <XAxis 
-                dataKey="monthLabel" 
-                tick={{ fontSize: 12, fill: '#6B7280' }}
+                dataKey="dateLabel" 
+                tick={{ fontSize: 11, fill: '#6B7280' }}
                 angle={-45}
                 textAnchor="end"
                 height={80}
+                interval={0}
               />
               <YAxis 
                 tick={{ fontSize: 12, fill: '#6B7280' }}
@@ -297,11 +242,18 @@ export default function CashflowPage() {
                 fill="#10B981" 
                 name="Erwartete Einnahmen"
                 radius={[4, 4, 0, 0]}
-              />
+              >
+                {dailyData.map((entry, index) => (
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={entry.isToday ? '#059669' : entry.isWeekend ? '#86EFAC' : '#10B981'} 
+                  />
+                ))}
+              </Bar>
               <Bar 
-                dataKey="tatsaechlicheEinnahmen" 
+                dataKey="bezahlt" 
                 fill="#3B82F6" 
-                name="Tatsächliche Einnahmen"
+                name="Bezahlt"
                 radius={[4, 4, 0, 0]}
               />
               <Bar 
@@ -312,10 +264,10 @@ export default function CashflowPage() {
               />
               <Line 
                 type="monotone" 
-                dataKey="offeneForderungen" 
+                dataKey="offen" 
                 stroke="#F59E0B" 
                 strokeWidth={2}
-                name="Offene Forderungen"
+                name="Offen"
                 dot={{ fill: '#F59E0B', r: 4 }}
               />
             </ComposedChart>
@@ -323,14 +275,14 @@ export default function CashflowPage() {
         )}
       </div>
 
-      {/* Detailed Table - CLEAN DESIGN */}
+      {/* Detailed Table - Daily View */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Detaillierte Monatsübersicht</h2>
-          <p className="text-sm text-gray-600 mt-1">Aufschlüsselung der Einnahmen pro Monat</p>
+          <h2 className="text-lg font-semibold text-gray-900">Detaillierte Tagesübersicht</h2>
+          <p className="text-sm text-gray-600 mt-1">Aufschlüsselung der Einnahmen pro Tag</p>
         </div>
 
-        {monthlyData.length === 0 ? (
+        {dailyData.length === 0 ? (
           <div className="p-12 text-center">
             <p className="text-gray-600">Keine Daten verfügbar</p>
           </div>
@@ -340,7 +292,7 @@ export default function CashflowPage() {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Monat
+                    Datum
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Erwartet
@@ -357,59 +309,61 @@ export default function CashflowPage() {
                   <th className="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Anzahl
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Status
-                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {monthlyData.map((month, index) => {
+                {dailyData.map((day, index) => {
+                  const isUrgent = day.isToday || index === 1 // Today or tomorrow
                   const statusColor = 
-                    month.ueberfaellig > 0 ? 'bg-red-50' :
-                    month.tatsaechlicheEinnahmen > month.erwarteteEinnahmen ? 'bg-emerald-50' :
-                    'bg-gray-50'
+                    day.ueberfaellig > 0 ? 'bg-red-50' :
+                    day.isToday ? 'bg-amber-50' :
+                    day.isWeekend ? 'bg-gray-50' :
+                    'bg-white'
 
                   return (
                     <tr 
-                      key={month.month}
-                      className={`hover:bg-amber-50 transition-colors ${
-                        index % 2 === 0 ? 'bg-white' : statusColor
+                      key={day.date}
+                      className={`hover:bg-amber-50 transition-colors ${statusColor} ${
+                        isUrgent ? 'border-l-4 border-amber-500' : ''
                       }`}
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-semibold text-gray-900">{month.monthLabel}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="text-sm font-semibold text-gray-900">{day.dateLabel}</div>
+                          {day.isToday && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-500 text-white">
+                              Heute
+                            </span>
+                          )}
+                          {day.isWeekend && (
+                            <span className="text-xs text-gray-400">Wochenende</span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="text-sm font-bold text-emerald-600 tabular-nums">{formatCurrency(month.erwarteteEinnahmen)}</div>
+                        <div className="text-sm font-bold text-emerald-600 tabular-nums">
+                          {formatCurrency(day.erwarteteEinnahmen)}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="text-sm font-bold text-blue-600 tabular-nums">{formatCurrency(month.tatsaechlicheEinnahmen)}</div>
+                        <div className="text-sm font-bold text-blue-600 tabular-nums">
+                          {formatCurrency(day.bezahlt)}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="text-sm font-bold text-amber-600 tabular-nums">{formatCurrency(month.offeneForderungen)}</div>
+                        <div className="text-sm font-bold text-amber-600 tabular-nums">
+                          {formatCurrency(day.offen)}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="text-sm font-bold text-red-600 tabular-nums">{formatCurrency(month.ueberfaellig)}</div>
+                        <div className="text-sm font-bold text-red-600 tabular-nums">
+                          {formatCurrency(day.ueberfaellig)}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 tabular-nums">
-                          {month.anzahlRechnungen}
+                          {day.anzahlRechnungen}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        {month.ueberfaellig > 0 ? (
-                          <span className="inline-flex items-center px-2 py-1 rounded-md bg-red-50 text-red-700 text-xs font-medium">
-                            Risiko
-                          </span>
-                        ) : month.tatsaechlicheEinnahmen > month.erwarteteEinnahmen ? (
-                          <span className="inline-flex items-center px-2 py-1 rounded-md bg-emerald-50 text-emerald-700 text-xs font-medium">
-                            Gut
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2 py-1 rounded-md bg-gray-50 text-gray-700 text-xs font-medium">
-                            Normal
-                          </span>
-                        )}
                       </td>
                     </tr>
                   )
@@ -417,23 +371,22 @@ export default function CashflowPage() {
               </tbody>
               <tfoot className="bg-gray-50 border-t-2 border-gray-300">
                 <tr>
-                  <td className="px-6 py-4 text-sm font-bold text-gray-900">Gesamt</td>
+                  <td className="px-6 py-4 text-sm font-bold text-gray-900">Gesamt (14 Tage)</td>
                   <td className="px-6 py-4 text-right text-sm font-bold text-emerald-600 tabular-nums">
-                    {formatCurrency(monthlyData.reduce((sum, m) => sum + m.erwarteteEinnahmen, 0))}
+                    {formatCurrency(dailyData.reduce((sum, d) => sum + d.erwarteteEinnahmen, 0))}
                   </td>
                   <td className="px-6 py-4 text-right text-sm font-bold text-blue-600 tabular-nums">
-                    {formatCurrency(monthlyData.reduce((sum, m) => sum + m.tatsaechlicheEinnahmen, 0))}
+                    {formatCurrency(dailyData.reduce((sum, d) => sum + d.bezahlt, 0))}
                   </td>
                   <td className="px-6 py-4 text-right text-sm font-bold text-amber-600 tabular-nums">
-                    {formatCurrency(monthlyData.reduce((sum, m) => sum + m.offeneForderungen, 0))}
+                    {formatCurrency(dailyData.reduce((sum, d) => sum + d.offen, 0))}
                   </td>
                   <td className="px-6 py-4 text-right text-sm font-bold text-red-600 tabular-nums">
-                    {formatCurrency(monthlyData.reduce((sum, m) => sum + m.ueberfaellig, 0))}
+                    {formatCurrency(dailyData.reduce((sum, d) => sum + d.ueberfaellig, 0))}
                   </td>
                   <td className="px-6 py-4 text-center text-sm font-bold text-gray-900 tabular-nums">
-                    {monthlyData.reduce((sum, m) => sum + m.anzahlRechnungen, 0)}
+                    {dailyData.reduce((sum, d) => sum + d.anzahlRechnungen, 0)}
                   </td>
-                  <td className="px-6 py-4"></td>
                 </tr>
               </tfoot>
             </table>
